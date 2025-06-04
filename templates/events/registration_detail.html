@@ -1,0 +1,398 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Registration Details - {{ registration.participant_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .registration-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 40px 0;
+        margin-bottom: 30px;
+    }
+    
+    .registration-card {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border: none;
+        margin-bottom: 20px;
+    }
+    
+    .status-badge {
+        font-size: 1rem;
+        padding: 8px 16px;
+    }
+    
+    .field-data {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+    
+    .qr-section {
+        text-align: center;
+        padding: 30px;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+    
+    .action-buttons .btn {
+        margin-right: 10px;
+        margin-bottom: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Registration Header -->
+<div class="registration-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-5 mb-3">{{ registration.participant_name }}</h1>
+                <p class="lead mb-4">Registration for {{ registration.event.name }}</p>
+                <div class="d-flex flex-wrap align-items-center">
+                    {% if registration.status == 'attended' %}
+                        <span class="badge bg-success status-badge me-3 mb-2">
+                            <i class="fas fa-check"></i> Attended
+                        </span>
+                    {% else %}
+                        <span class="badge bg-warning status-badge me-3 mb-2">
+                            <i class="fas fa-clock"></i> Registered
+                        </span>
+                    {% endif %}
+                    <span class="badge bg-light text-dark me-3 mb-2">
+                        <i class="fas fa-calendar"></i> 
+                        Registered {{ registration.registered_at|date:"M d, Y" }}
+                    </span>
+                    {% if registration.attended_at %}
+                    <span class="badge bg-light text-dark mb-2">
+                        <i class="fas fa-check-circle"></i> 
+                        Attended {{ registration.attended_at|date:"M d, Y g:i A" }}
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-4 text-center">
+                <div class="qr-section">
+                    <h5 class="mb-3">QR Code</h5>
+                    <img src="data:image/png;base64,{{ registration.qr_code }}" 
+                         alt="Registration QR Code" class="img-fluid" style="max-width: 200px;">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Basic Information -->
+            <div class="registration-card card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user"></i> Basic Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong><i class="fas fa-user text-primary"></i> Name:</strong></p>
+                            <p class="ms-3">{{ registration.participant_name }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong><i class="fas fa-envelope text-info"></i> Email:</strong></p>
+                            <p class="ms-3">
+                                <a href="mailto:{{ registration.participant_email }}">
+                                    {{ registration.participant_email }}
+                                </a>
+                            </p>
+                        </div>
+                        {% if registration.participant_phone %}
+                        <div class="col-md-6">
+                            <p><strong><i class="fas fa-phone text-success"></i> Phone:</strong></p>
+                            <p class="ms-3">
+                                <a href="tel:{{ registration.participant_phone }}">
+                                    {{ registration.participant_phone }}
+                                </a>
+                            </p>
+                        </div>
+                        {% endif %}
+                        <div class="col-md-6">
+                            <p><strong><i class="fas fa-hashtag text-secondary"></i> Registration ID:</strong></p>
+                            <p class="ms-3">
+                                <code>{{ registration.unique_id }}</code>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Event Information -->
+            <div class="registration-card card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-calendar-alt"></i> Event Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong><i class="fas fa-calendar text-primary"></i> Event:</strong></p>
+                            <p class="ms-3">
+                                <a href="{% url 'events:event_detail' registration.event.pk %}">
+                                    {{ registration.event.name }}
+                                </a>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong><i class="fas fa-clock text-info"></i> Date & Time:</strong></p>
+                            <p class="ms-3">{{ registration.event.date|date:"l, F d, Y g:i A" }}</p>
+                        </div>
+                        {% if registration.event.location %}
+                        <div class="col-md-6">
+                            <p><strong><i class="fas fa-map-marker-alt text-danger"></i> Location:</strong></p>
+                            <p class="ms-3">{{ registration.event.location }}</p>
+                        </div>
+                        {% endif %}
+                        <div class="col-md-6">
+                            <p><strong><i class="fas fa-user-tie text-secondary"></i> Organizer:</strong></p>
+                            <p class="ms-3">{{ registration.event.organizer.get_full_name|default:registration.event.organizer.username }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Custom Form Data -->
+            {% if registration.get_field_data %}
+            <div class="registration-card card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-wpforms"></i> Additional Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for field_name, value in registration.get_field_data.items %}
+                        {% if value %}
+                        <div class="field-data">
+                            <strong>{{ field_name }}:</strong>
+                            <p class="mb-0 mt-1">{{ value }}</p>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Timeline -->
+            <div class="registration-card card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-history"></i> Timeline
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-primary"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">Registration Completed</h6>
+                                <p class="text-muted mb-0">{{ registration.registered_at|date:"F d, Y g:i A" }}</p>
+                                <small class="text-muted">Participant successfully registered for the event</small>
+                            </div>
+                        </div>
+                        
+                        {% if registration.attended_at %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-success"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">Checked In</h6>
+                                <p class="text-muted mb-0">{{ registration.attended_at|date:"F d, Y g:i A" }}</p>
+                                <small class="text-muted">Participant checked in to the event</small>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Actions -->
+            <div class="registration-card card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-cogs"></i> Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="action-buttons d-grid gap-2">
+                        {% if registration.status != 'attended' %}
+                            <button class="btn btn-success" onclick="checkinParticipant()">
+                                <i class="fas fa-check"></i> Check In Now
+                            </button>
+                        {% endif %}
+                        
+                        <a href="{% url 'events:registration_qr' registration.pk %}" class="btn btn-info">
+                            <i class="fas fa-qrcode"></i> View QR Code
+                        </a>
+                        
+                        <a href="{% url 'checkin:participants' registration.event.pk %}" class="btn btn-outline-primary">
+                            <i class="fas fa-users"></i> All Participants
+                        </a>
+                        
+                        <a href="{% url 'events:event_detail' registration.event.pk %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-calendar-alt"></i> Event Details
+                        </a>
+                        
+                        <button class="btn btn-outline-danger" onclick="sendEmail()">
+                            <i class="fas fa-envelope"></i> Send Email
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="registration-card card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar"></i> Event Stats
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h4 class="text-primary">{{ registration.event.total_registrations }}</h4>
+                            <small class="text-muted">Total Registered</small>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="text-success">{{ registration.event.total_attended }}</h4>
+                            <small class="text-muted">Attended</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #dee2e6;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 30px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -22px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 3px #dee2e6;
+}
+
+.timeline-content {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 3px solid #007bff;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function checkinParticipant() {
+    if (!confirm('Are you sure you want to check in {{ registration.participant_name }}?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch("{% url 'checkin:checkin_api' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ registration_id: {{ registration.id }} })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showAlert('success', data.message);
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            showAlert('danger', data.error || 'Check-in failed');
+        }
+        
+    } catch (error) {
+        console.error('Error during check-in:', error);
+        showAlert('danger', 'Network error during check-in');
+    }
+}
+
+function sendEmail() {
+    const email = '{{ registration.participant_email }}';
+    const subject = 'Regarding your registration for {{ registration.event.name }}';
+    const body = 'Dear {{ registration.participant_name }},\n\nThank you for registering for {{ registration.event.name }}.\n\nBest regards,\n{{ registration.event.organizer.get_full_name|default:registration.event.organizer.username }}';
+    
+    const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailtoLink;
+}
+
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.container').firstChild);
+    
+    setTimeout(() => {
+        if (alertDiv) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

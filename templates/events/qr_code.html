@@ -1,0 +1,65 @@
+{% extends 'base/base.html' %}
+
+{% block title %}QR Code - {{ registration.event.name }}{% endblock %}
+
+{% block content %}
+<div class="col-12">
+    <div class="row justify-content-center mt-3">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h3 class="mb-4">{{ registration.event.name }}</h3>
+                    
+                    <div class="mb-3">
+                        <strong>Participant:</strong> {{ registration.participant_name|default:"N/A" }}<br>
+                        <strong>Registration ID:</strong> {{ registration.unique_id }}<br>
+                        <strong>Status:</strong> 
+                        <span class="badge {% if registration.status == 'attended' %}bg-success{% elif registration.status == 'cancelled' %}bg-danger{% else %}bg-warning{% endif %}">
+                            {{ registration.get_status_display }}
+                        </span>
+                    </div>
+                    
+                    <div class="qr-code-container mb-4">
+                        {% if registration.qr_code_image %}
+                            <img src="{{ registration.qr_code_image.url }}" alt="QR Code" class="img-fluid border rounded">
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <p class="text-muted">
+                            <i class="fas fa-calendar-alt me-1"></i>{{ registration.event.start_date }} at {{ registration.event.start_time }}<br>
+                            <i class="fas fa-map-marker-alt me-1"></i>{{ registration.event.location }}
+                        </p>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{{ registration.qr_code_image.url }}" download="qr_code_{{ registration.unique_id }}.png" class="btn btn-primary">
+                            <i class="fas fa-download me-1"></i>Download QR Code
+                        </a>
+                        
+                        <button onclick="window.print()" class="btn btn-outline-secondary">
+                            <i class="fas fa-print me-1"></i>Print
+                        </button>
+                    </div>
+                    
+                    <div class="mt-4 alert alert-info">
+                        <small>
+                            <i class="fas fa-info-circle me-1"></i>
+                            Present this QR code at the event entrance for quick check-in.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+@media print {
+    .navbar, .btn, .alert { display: none !important; }
+    .card { border: none !important; box-shadow: none !important; }
+}
+</style>
+{% endblock %}

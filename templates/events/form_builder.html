@@ -1,0 +1,323 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Form Builder - {{ event.name }}{% endblock %}
+
+{% block content %}
+<div class="col-12">
+    <div class="d-flex justify-content-between align-items-center mb-4 mt-3">
+        <h2><i class="fas fa-edit me-2"></i>Form Builder - {{ event.name }}</h2>
+        <div>
+            {% if event.is_published %}
+                <a href="{% url 'events:event_register' event.slug %}" target="_blank" class="btn btn-success me-2">
+                    <i class="fas fa-external-link-alt me-1"></i>View Registration Form
+                </a>
+            {% endif %}
+            <a href="{% url 'events:event_detail' event.pk %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back to Event
+            </a>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Current Fields -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-list me-2"></i>Registration Form Fields</h5>
+                </div>
+                <div class="card-body">
+                    {% if fields %}
+                        <div class="list-group">
+                            {% for field in fields %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center">                                    <div>
+                                        <h6 class="mb-1">
+                                            {{ field.field_name }}
+                                            {% if field.is_required %}
+                                                <span class="text-danger">*</span>
+                                            {% endif %}
+                                            
+                                            <!-- Participant Identifier Badges -->
+                                            {% if field.is_participant_name %}
+                                                <span class="badge bg-primary ms-2" title="Used as Participant Name">
+                                                    <i class="fas fa-user"></i> Name
+                                                </span>
+                                            {% endif %}
+                                            {% if field.is_participant_email %}
+                                                <span class="badge bg-info ms-1" title="Used as Participant Email">
+                                                    <i class="fas fa-envelope"></i> Email
+                                                </span>
+                                            {% endif %}
+                                            {% if field.is_participant_phone %}
+                                                <span class="badge bg-success ms-1" title="Used as Participant Phone">
+                                                    <i class="fas fa-phone"></i> Phone
+                                                </span>
+                                            {% endif %}
+                                        </h6>
+                                        <small class="text-muted">
+                                            Type: {{ field.get_field_type_display }}
+                                            {% if field.placeholder %}
+                                                | Placeholder: "{{ field.placeholder }}"
+                                            {% endif %}
+                                        </small>
+                                        {% if field.help_text %}
+                                            <br><small class="text-info">Help: {{ field.help_text }}</small>
+                                        {% endif %}
+                                        {% if field.choices %}
+                                            <br><small class="text-muted">Choices: {{ field.choices|truncatewords:10 }}</small>
+                                        {% endif %}
+                                    </div>
+                                    <div class="btn-group">
+                                        <button class="btn btn-sm btn-outline-primary" onclick="editField({{ field.id }}, '{{ field.field_name }}', '{{ field.field_type }}', {{ field.is_required|yesno:'true,false' }}, {{ field.order }}, '{{ field.choices|escapejs }}', '{{ field.placeholder|escapejs }}', '{{ field.help_text|escapejs }}', {{ field.is_participant_name|yesno:'true,false' }}, {{ field.is_participant_email|yesno:'true,false' }}, {{ field.is_participant_phone|yesno:'true,false' }})">>
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <form method="post" action="{% url 'events:delete_field' event.slug field.id %}" class="d-inline" onsubmit="return confirm('Are you sure?')">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-plus-circle fa-2x text-muted mb-3"></i>
+                            <h5 class="text-muted">No form fields yet</h5>
+                            <p class="text-muted">Add your first field to start building the registration form.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Add New Field -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-plus me-2"></i>Add New Field</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'events:add_field' event.slug %}" id="addFieldForm">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Field Name *</label>
+                            {{ field_form.field_name }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Field Type *</label>
+                            {{ field_form.field_type }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ field_form.is_required }}
+                                <label class="form-check-label" for="{{ field_form.is_required.id_for_label }}">
+                                    Required Field
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Display Order</label>
+                            {{ field_form.order }}
+                        </div>
+                        
+                        <div class="mb-3" id="choicesField" style="display: none;">
+                            <label class="form-label">Choices (one per line)</label>
+                            {{ field_form.choices }}
+                            <small class="form-text text-muted">For radio, checkbox, and select fields</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Placeholder Text</label>
+                            {{ field_form.placeholder }}
+                        </div>
+                          <div class="mb-3">
+                            <label class="form-label">Help Text</label>
+                            {{ field_form.help_text }}
+                        </div>
+                        
+                        <!-- Participant Identifier Fields -->
+                        <div class="mb-3">
+                            <label class="form-label text-primary">
+                                <i class="fas fa-user me-1"></i>Participant Identifiers
+                            </label>
+                            <small class="form-text text-muted d-block mb-2">
+                                Mark this field to use its value for participant identification
+                            </small>
+                            
+                            <div class="form-check mb-2">
+                                {{ field_form.is_participant_name }}
+                                <label class="form-check-label" for="{{ field_form.is_participant_name.id_for_label }}">
+                                    <i class="fas fa-user me-1"></i>Use as Participant Name
+                                </label>
+                            </div>
+                            
+                            <div class="form-check mb-2">
+                                {{ field_form.is_participant_email }}
+                                <label class="form-check-label" for="{{ field_form.is_participant_email.id_for_label }}">
+                                    <i class="fas fa-envelope me-1"></i>Use as Participant Email
+                                </label>
+                            </div>
+                            
+                            <div class="form-check">
+                                {{ field_form.is_participant_phone }}
+                                <label class="form-check-label" for="{{ field_form.is_participant_phone.id_for_label }}">
+                                    <i class="fas fa-phone me-1"></i>Use as Participant Phone
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-plus me-1"></i>Add Field
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Field Modal -->
+<div class="modal fade" id="editFieldModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Field</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" id="editFieldForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Field Name *</label>
+                        <input type="text" class="form-control" name="field_name" id="editFieldName" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Field Type *</label>
+                        <select class="form-control" name="field_type" id="editFieldType" required>
+                            {% for value, label in field_form.field_type.field.choices %}
+                                <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" name="is_required" id="editIsRequired">
+                            <label class="form-check-label" for="editIsRequired">Required Field</label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Display Order</label>
+                        <input type="number" class="form-control" name="order" id="editOrder">
+                    </div>
+                    
+                    <div class="mb-3" id="editChoicesField">
+                        <label class="form-label">Choices (one per line)</label>
+                        <textarea class="form-control" name="choices" id="editChoices" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Placeholder Text</label>
+                        <input type="text" class="form-control" name="placeholder" id="editPlaceholder">
+                    </div>
+                      <div class="mb-3">
+                        <label class="form-label">Help Text</label>
+                        <input type="text" class="form-control" name="help_text" id="editHelpText">
+                    </div>
+                    
+                    <!-- Participant Identifier Fields -->
+                    <div class="mb-3">
+                        <label class="form-label text-primary">
+                            <i class="fas fa-user me-1"></i>Participant Identifiers
+                        </label>
+                        <small class="form-text text-muted d-block mb-2">
+                            Mark this field to use its value for participant identification
+                        </small>
+                        
+                        <div class="form-check mb-2">
+                            <input type="checkbox" class="form-check-input" name="is_participant_name" id="editIsParticipantName">
+                            <label class="form-check-label" for="editIsParticipantName">
+                                <i class="fas fa-user me-1"></i>Use as Participant Name
+                            </label>
+                        </div>
+                        
+                        <div class="form-check mb-2">
+                            <input type="checkbox" class="form-check-input" name="is_participant_email" id="editIsParticipantEmail">
+                            <label class="form-check-label" for="editIsParticipantEmail">
+                                <i class="fas fa-envelope me-1"></i>Use as Participant Email
+                            </label>
+                        </div>
+                        
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" name="is_participant_phone" id="editIsParticipantPhone">
+                            <label class="form-check-label" for="editIsParticipantPhone">
+                                <i class="fas fa-phone me-1"></i>Use as Participant Phone
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Field</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Show/hide choices field based on field type
+function toggleChoicesField(selectElement, choicesFieldId) {
+    const choicesField = document.getElementById(choicesFieldId);
+    const fieldType = selectElement.value;
+    
+    if (['radio', 'checkbox', 'select'].includes(fieldType)) {
+        choicesField.style.display = 'block';
+    } else {
+        choicesField.style.display = 'none';
+    }
+}
+
+// Add event listener for new field form
+document.getElementById('{{ field_form.field_type.id_for_label }}').addEventListener('change', function() {
+    toggleChoicesField(this, 'choicesField');
+});
+
+// Add event listener for edit field form
+document.getElementById('editFieldType').addEventListener('change', function() {
+    toggleChoicesField(this, 'editChoicesField');
+});
+
+// Function to open edit modal
+function editField(id, name, type, required, order, choices, placeholder, helpText, isParticipantName, isParticipantEmail, isParticipantPhone) {
+    document.getElementById('editFieldName').value = name;
+    document.getElementById('editFieldType').value = type;
+    document.getElementById('editIsRequired').checked = required;
+    document.getElementById('editOrder').value = order;
+    document.getElementById('editChoices').value = choices;
+    document.getElementById('editPlaceholder').value = placeholder;
+    document.getElementById('editHelpText').value = helpText;
+    document.getElementById('editIsParticipantName').checked = isParticipantName;
+    document.getElementById('editIsParticipantEmail').checked = isParticipantEmail;
+    document.getElementById('editIsParticipantPhone').checked = isParticipantPhone;
+    
+    // Set form action
+    document.getElementById('editFieldForm').action = "{% url 'events:edit_field' event.slug 0 %}".replace('0', id);
+    
+    // Toggle choices field visibility
+    toggleChoicesField(document.getElementById('editFieldType'), 'editChoicesField');
+    
+    // Show modal
+    new bootstrap.Modal(document.getElementById('editFieldModal')).show();
+}
+</script>
+{% endblock %}

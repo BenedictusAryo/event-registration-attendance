@@ -1,0 +1,467 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}QR Code Scanner - {{ event.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .scanner-container {
+        position: relative;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+    
+    #video {
+        width: 100%;
+        height: auto;
+        border-radius: 8px;
+        border: 2px solid #007bff;
+    }
+    
+    .scanner-overlay {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 200px;
+        height: 200px;
+        border: 2px solid #28a745;
+        border-radius: 8px;
+        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.3);
+    }
+    
+    .scanner-controls {
+        text-align: center;
+        margin: 20px 0;
+    }
+    
+    .status-card {
+        margin-top: 20px;
+        display: none;
+    }
+    
+    .participant-info {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 15px;
+    }
+    
+    .btn-scan {
+        min-width: 150px;
+    }
+    
+    .loading-spinner {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>QR Code Scanner</h2>
+                    <p class="text-muted mb-0">{{ event.name }}</p>
+                </div>
+                <a href="{% url 'checkin:checkin_home' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Events
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-camera"></i> Camera Scanner
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="scanner-container">
+                        <video id="video" autoplay muted playsinline></video>
+                        <div class="scanner-overlay"></div>
+                    </div>
+                    
+                    <div class="scanner-controls">
+                        <button id="startScan" class="btn btn-success btn-scan">
+                            <i class="fas fa-play"></i> Start Scanning
+                        </button>
+                        <button id="stopScan" class="btn btn-danger btn-scan" style="display: none;">
+                            <i class="fas fa-stop"></i> Stop Scanning
+                        </button>
+                        <div class="loading-spinner">
+                            <div class="spinner-border spinner-border-sm" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            Processing...
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <small class="text-muted">
+                            Point the camera at a QR code to scan it automatically
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-keyboard"></i> Manual Entry
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="manualScanForm">
+                        <div class="mb-3">
+                            <label for="qrCodeInput" class="form-label">QR Code Value</label>
+                            <input type="text" class="form-control" id="qrCodeInput" 
+                                   placeholder="Enter or paste QR code value">
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Check Registration
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Status Card -->
+            <div id="statusCard" class="card status-card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0" id="statusTitle">Participant Found</h5>
+                </div>
+                <div class="card-body">
+                    <div id="participantInfo" class="participant-info">
+                        <!-- Participant details will be populated here -->
+                    </div>
+                    
+                    <div class="mt-3">
+                        <button id="checkinBtn" class="btn btn-success me-2" style="display: none;">
+                            <i class="fas fa-check"></i> Check In
+                        </button>
+                        <button id="scanAnotherBtn" class="btn btn-outline-primary">
+                            <i class="fas fa-qrcode"></i> Scan Another
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Statistics -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar"></i> Event Statistics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="stat-item">
+                                <h3 class="text-primary">{{ event.total_registrations }}</h3>
+                                <p class="text-muted mb-0">Total Registered</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-item">
+                                <h3 class="text-success">{{ event.total_attended }}</h3>
+                                <p class="text-muted mb-0">Attended</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-item">
+                                <h3 class="text-warning">{{ event.pending_registrations }}</h3>
+                                <p class="text-muted mb-0">Pending</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-item">
+                                <h3 class="text-info">
+                                    {% if event.total_registrations > 0 %}
+                                        {{ event.total_attended|floatformat:0 }}%
+                                    {% else %}
+                                        0%
+                                    {% endif %}
+                                </h3>
+                                <p class="text-muted mb-0">Attendance Rate</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- QR Code Scanner Library -->
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+
+<script>
+let video = document.getElementById('video');
+let canvas = document.createElement('canvas');
+let context = canvas.getContext('2d');
+let scanning = false;
+let stream = null;
+
+const startScanBtn = document.getElementById('startScan');
+const stopScanBtn = document.getElementById('stopScan');
+const statusCard = document.getElementById('statusCard');
+const loadingSpinner = document.querySelector('.loading-spinner');
+
+// Start camera scanning
+startScanBtn.addEventListener('click', async function() {
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { 
+                facingMode: 'environment',
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            } 
+        });
+        
+        video.srcObject = stream;
+        video.play();
+        
+        scanning = true;
+        startScanBtn.style.display = 'none';
+        stopScanBtn.style.display = 'inline-block';
+        
+        scanQRCode();
+        
+    } catch (err) {
+        console.error('Error accessing camera:', err);
+        alert('Error accessing camera. Please make sure you have granted camera permissions.');
+    }
+});
+
+// Stop camera scanning
+stopScanBtn.addEventListener('click', function() {
+    stopScanning();
+});
+
+function stopScanning() {
+    scanning = false;
+    
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+    }
+    
+    video.srcObject = null;
+    startScanBtn.style.display = 'inline-block';
+    stopScanBtn.style.display = 'none';
+}
+
+function scanQRCode() {
+    if (!scanning) return;
+    
+    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        canvas.height = video.videoHeight;
+        canvas.width = video.videoWidth;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
+        
+        if (code) {
+            console.log('QR Code detected:', code.data);
+            processQRCode(code.data);
+            return;
+        }
+    }
+    
+    requestAnimationFrame(scanQRCode);
+}
+
+// Manual form submission
+document.getElementById('manualScanForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const qrCodeValue = document.getElementById('qrCodeInput').value.trim();
+    if (qrCodeValue) {
+        processQRCode(qrCodeValue);
+    }
+});
+
+async function processQRCode(qrCodeData) {
+    showLoading(true);
+    
+    try {
+        const response = await fetch("{% url 'checkin:scan_qr_api' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ qr_code: qrCodeData })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            displayParticipantInfo(data);
+        } else {
+            displayError(data.error || 'Unknown error occurred');
+        }
+        
+    } catch (error) {
+        console.error('Error processing QR code:', error);
+        displayError('Network error. Please try again.');
+    } finally {
+        showLoading(false);
+    }
+}
+
+function displayParticipantInfo(data) {
+    const participantInfo = document.getElementById('participantInfo');
+    const checkinBtn = document.getElementById('checkinBtn');
+    const statusTitle = document.getElementById('statusTitle');
+    
+    let statusBadge = '';
+    let canCheckin = false;
+    
+    if (data.status === 'attended') {
+        statusBadge = '<span class="badge bg-success">Already Checked In</span>';
+        statusTitle.textContent = 'Already Checked In';
+    } else {
+        statusBadge = '<span class="badge bg-warning">Registered</span>';
+        statusTitle.textContent = 'Ready to Check In';
+        canCheckin = true;
+    }
+    
+    const attendedTime = data.attended_at ? 
+        `<p><strong>Checked in:</strong> ${new Date(data.attended_at).toLocaleString()}</p>` : '';
+    
+    participantInfo.innerHTML = `
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <h6 class="mb-0">${data.participant_name}</h6>
+            ${statusBadge}
+        </div>
+        <p class="mb-1"><strong>Email:</strong> ${data.participant_email}</p>
+        <p class="mb-1"><strong>Event:</strong> ${data.event_name}</p>
+        <p class="mb-1"><strong>Registered:</strong> ${new Date(data.registered_at).toLocaleString()}</p>
+        ${attendedTime}
+    `;
+    
+    checkinBtn.style.display = canCheckin ? 'inline-block' : 'none';
+    checkinBtn.onclick = () => performCheckin(data.registration_id);
+    
+    statusCard.style.display = 'block';
+    statusCard.className = 'card status-card border-success';
+}
+
+function displayError(message) {
+    const participantInfo = document.getElementById('participantInfo');
+    const checkinBtn = document.getElementById('checkinBtn');
+    const statusTitle = document.getElementById('statusTitle');
+    
+    statusTitle.textContent = 'Error';
+    participantInfo.innerHTML = `
+        <div class="alert alert-danger mb-0">
+            <i class="fas fa-exclamation-triangle"></i> ${message}
+        </div>
+    `;
+    
+    checkinBtn.style.display = 'none';
+    statusCard.style.display = 'block';
+    statusCard.className = 'card status-card border-danger';
+}
+
+async function performCheckin(registrationId) {
+    showLoading(true);
+    
+    try {
+        const response = await fetch("{% url 'checkin:checkin_api' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ registration_id: registrationId })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            displaySuccessMessage(data.message);
+            // Refresh page statistics
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        } else {
+            displayError(data.error || 'Check-in failed');
+        }
+        
+    } catch (error) {
+        console.error('Error during check-in:', error);
+        displayError('Network error during check-in');
+    } finally {
+        showLoading(false);
+    }
+}
+
+function displaySuccessMessage(message) {
+    const participantInfo = document.getElementById('participantInfo');
+    const checkinBtn = document.getElementById('checkinBtn');
+    const statusTitle = document.getElementById('statusTitle');
+    
+    statusTitle.textContent = 'Check-in Successful';
+    participantInfo.innerHTML = `
+        <div class="alert alert-success mb-0">
+            <i class="fas fa-check-circle"></i> ${message}
+        </div>
+    `;
+    
+    checkinBtn.style.display = 'none';
+    statusCard.className = 'card status-card border-success';
+}
+
+function showLoading(show) {
+    loadingSpinner.style.display = show ? 'block' : 'none';
+    startScanBtn.disabled = show;
+    stopScanBtn.disabled = show;
+}
+
+// Scan another button
+document.getElementById('scanAnotherBtn').addEventListener('click', function() {
+    statusCard.style.display = 'none';
+    document.getElementById('qrCodeInput').value = '';
+    
+    if (!scanning) {
+        startScanBtn.click();
+    }
+});
+
+// CSRF Cookie function
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Clean up on page unload
+window.addEventListener('beforeunload', function() {
+    stopScanning();
+});
+</script>
+{% endblock %}

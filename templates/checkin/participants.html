@@ -1,0 +1,443 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Participants - {{ event.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .participant-card {
+        transition: transform 0.2s ease;
+    }
+    
+    .participant-card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .status-badge {
+        font-size: 0.8rem;
+    }
+    
+    .export-section {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .search-section {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .table-responsive {
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .table thead th {
+        background-color: #343a40;
+        color: white;
+        border: none;
+    }
+    
+    .btn-group-sm .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>Participants</h2>
+                    <p class="text-muted mb-0">{{ event.name }}</p>
+                </div>
+                <div>
+                    <a href="{% url 'checkin:qr_scanner' event.pk %}" class="btn btn-success me-2">
+                        <i class="fas fa-qrcode"></i> QR Scanner
+                    </a>
+                    <a href="{% url 'checkin:checkin_home' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Events
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center border-primary">
+                <div class="card-body">
+                    <h3 class="card-title text-primary">{{ event.total_registrations }}</h3>
+                    <p class="card-text text-muted">Total Registered</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border-success">
+                <div class="card-body">
+                    <h3 class="card-title text-success">{{ event.total_attended }}</h3>
+                    <p class="card-text text-muted">Attended</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border-warning">
+                <div class="card-body">
+                    <h3 class="card-title text-warning">{{ event.pending_registrations }}</h3>
+                    <p class="card-text text-muted">Pending</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border-info">
+                <div class="card-body">
+                    <h3 class="card-title text-info">
+                        {% if event.total_registrations > 0 %}
+                            {% widthratio event.total_attended event.total_registrations 100 %}%
+                        {% else %}
+                            0%
+                        {% endif %}
+                    </h3>
+                    <p class="card-text text-muted">Attendance Rate</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Section -->
+    <div class="export-section">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h5 class="mb-0">
+                    <i class="fas fa-download"></i> Export Data
+                </h5>
+                <small class="text-muted">Download participant data in various formats</small>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <a href="{% url 'events:export_participants' event.pk %}?format=csv" class="btn btn-outline-success me-2">
+                    <i class="fas fa-file-csv"></i> Export CSV
+                </a>
+                <a href="{% url 'events:export_participants' event.pk %}?format=excel" class="btn btn-outline-primary">
+                    <i class="fas fa-file-excel"></i> Export Excel
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="search-section">
+        <form method="GET" class="row g-3">
+            <div class="col-md-4">
+                <label for="search" class="form-label">Search Participants</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="{{ request.GET.search }}" placeholder="Name or email...">
+            </div>
+            <div class="col-md-3">
+                <label for="status" class="form-label">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">All Status</option>
+                    <option value="registered" {% if request.GET.status == 'registered' %}selected{% endif %}>Registered</option>
+                    <option value="attended" {% if request.GET.status == 'attended' %}selected{% endif %}>Attended</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="sort" class="form-label">Sort By</label>
+                <select class="form-select" id="sort" name="sort">
+                    <option value="-registered_at" {% if request.GET.sort == '-registered_at' %}selected{% endif %}>
+                        Registration Date (Newest)
+                    </option>
+                    <option value="registered_at" {% if request.GET.sort == 'registered_at' %}selected{% endif %}>
+                        Registration Date (Oldest)
+                    </option>
+                    <option value="participant_name" {% if request.GET.sort == 'participant_name' %}selected{% endif %}>
+                        Name (A-Z)
+                    </option>
+                    <option value="-participant_name" {% if request.GET.sort == '-participant_name' %}selected{% endif %}>
+                        Name (Z-A)
+                    </option>
+                    <option value="-attended_at" {% if request.GET.sort == '-attended_at' %}selected{% endif %}>
+                        Check-in Time (Recent)
+                    </option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Filter
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Participants Table -->
+    <div class="row">
+        <div class="col-12">
+            {% if registrations %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Participant</th>
+                                <th>Email</th>
+                                <th>Registration Date</th>
+                                <th>Status</th>
+                                <th>Check-in Time</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for registration in registrations %}
+                            <tr>
+                                <td>
+                                    <strong>{{ registration.participant_name }}</strong>
+                                    {% if registration.participant_phone %}
+                                        <br><small class="text-muted">{{ registration.participant_phone }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>{{ registration.participant_email }}</td>
+                                <td>
+                                    {{ registration.registered_at|date:"M d, Y" }}
+                                    <br><small class="text-muted">{{ registration.registered_at|time:"g:i A" }}</small>
+                                </td>
+                                <td>
+                                    {% if registration.status == 'attended' %}
+                                        <span class="badge bg-success status-badge">
+                                            <i class="fas fa-check"></i> Attended
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-warning status-badge">
+                                            <i class="fas fa-clock"></i> Registered
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if registration.attended_at %}
+                                        {{ registration.attended_at|date:"M d, Y" }}
+                                        <br><small class="text-muted">{{ registration.attended_at|time:"g:i A" }}</small>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{% url 'events:registration_detail' registration.pk %}" 
+                                           class="btn btn-outline-primary" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if registration.status != 'attended' %}
+                                            <button class="btn btn-outline-success checkin-btn" 
+                                                    data-registration-id="{{ registration.id }}"
+                                                    data-participant-name="{{ registration.participant_name }}"
+                                                    title="Check In">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        {% endif %}
+                                        <a href="{% url 'events:registration_qr' registration.pk %}" 
+                                           class="btn btn-outline-info" title="View QR Code">
+                                            <i class="fas fa-qrcode"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if is_paginated %}
+                <nav aria-label="Participants pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">
+                                    <i class="fas fa-angle-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+
+            {% else %}
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                        <h4>No Participants Found</h4>
+                        <p class="text-muted">
+                            {% if request.GET.search or request.GET.status %}
+                                No participants match your search criteria.
+                                <br><a href="{% url 'checkin:participants' event.pk %}" class="btn btn-outline-primary mt-2">
+                                    Clear Filters
+                                </a>
+                            {% else %}
+                                No one has registered for this event yet.
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Check-in Confirmation Modal -->
+<div class="modal fade" id="checkinModal" tabindex="-1" aria-labelledby="checkinModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="checkinModalLabel">Confirm Check-in</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to check in <strong id="participantName"></strong>?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="confirmCheckinBtn">
+                    <i class="fas fa-check"></i> Check In
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentRegistrationId = null;
+
+// Handle check-in button clicks
+document.querySelectorAll('.checkin-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        currentRegistrationId = this.dataset.registrationId;
+        const participantName = this.dataset.participantName;
+        
+        document.getElementById('participantName').textContent = participantName;
+        
+        const modal = new bootstrap.Modal(document.getElementById('checkinModal'));
+        modal.show();
+    });
+});
+
+// Handle confirm check-in
+document.getElementById('confirmCheckinBtn').addEventListener('click', async function() {
+    if (!currentRegistrationId) return;
+    
+    this.disabled = true;
+    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking in...';
+    
+    try {
+        const response = await fetch("{% url 'checkin:checkin_api' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ registration_id: currentRegistrationId })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Hide modal
+            bootstrap.Modal.getInstance(document.getElementById('checkinModal')).hide();
+            
+            // Show success message
+            showAlert('success', data.message);
+            
+            // Reload page to refresh data
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            showAlert('danger', data.error || 'Check-in failed');
+            this.disabled = false;
+            this.innerHTML = '<i class="fas fa-check"></i> Check In';
+        }
+        
+    } catch (error) {
+        console.error('Error during check-in:', error);
+        showAlert('danger', 'Network error during check-in');
+        this.disabled = false;
+        this.innerHTML = '<i class="fas fa-check"></i> Check In';
+    }
+});
+
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.container').firstChild);
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        if (alertDiv) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+
+// CSRF Cookie function
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

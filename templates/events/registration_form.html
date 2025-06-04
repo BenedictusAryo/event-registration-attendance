@@ -1,0 +1,76 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Register for {{ event.name }}{% endblock %}
+
+{% block content %}
+<div class="col-12">
+    <div class="row justify-content-center mt-3">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <h2><i class="fas fa-calendar-check me-2"></i>{{ event.name }}</h2>
+                        <div class="text-muted">
+                            <p><i class="fas fa-calendar-alt me-1"></i>{{ event.start_date }} at {{ event.start_time }}</p>
+                            <p><i class="fas fa-map-marker-alt me-1"></i>{{ event.location }}</p>
+                        </div>                        {% if event.description %}
+                            <p class="text-muted">{{ event.description }}</p>
+                        {% endif %}
+                        
+                        {% if event.image %}
+                            <div class="text-center mb-3">
+                                <img src="{{ event.image.url }}" alt="{{ event.name }}" class="img-fluid rounded" style="max-height: 300px; object-fit: cover;">
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <hr>
+                    
+                    <h4 class="mb-4">Registration Form</h4>
+                    
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        {% for field in form %}
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    {{ field.label }}
+                                    {% if field.field.required %}
+                                        <span class="text-danger">*</span>
+                                    {% endif %}
+                                </label>
+                                
+                                {{ field }}
+                                
+                                {% if field.help_text %}
+                                    <div class="form-text">{{ field.help_text }}</div>
+                                {% endif %}
+                                
+                                {% if field.errors %}
+                                    <div class="text-danger">
+                                        {% for error in field.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-check me-1"></i>Register for Event
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="text-center mt-3">
+                        <small class="text-muted">
+                            You will receive a QR code after successful registration.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

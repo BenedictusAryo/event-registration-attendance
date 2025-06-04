@@ -1,0 +1,324 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Edit Profile{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 40px 0;
+        margin-bottom: 30px;
+    }
+    
+    .profile-card {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border: none;
+        margin-bottom: 20px;
+    }
+    
+    .avatar-preview {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        border: 4px solid #e9ecef;
+        object-fit: cover;
+        margin-bottom: 15px;
+    }
+    
+    .avatar-placeholder {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        border: 4px solid #e9ecef;
+        background-color: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: #6c757d;
+        margin-bottom: 15px;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #495057;
+    }
+    
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .btn-primary {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        border: none;
+        padding: 12px 30px;
+        font-weight: 600;
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(45deg, #5a6fd8, #6b42a0);
+        transform: translateY(-1px);
+    }
+    
+    .required-field::after {
+        content: " *";
+        color: #dc3545;
+    }
+    
+    .help-text {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Profile Header -->
+<div class="profile-header">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="display-6 mb-0">
+                    <i class="fas fa-user-edit"></i> Edit Profile
+                </h1>
+                <p class="lead mb-0">Update your personal information and preferences</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Profile Form -->
+            <div class="profile-card card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user"></i> Profile Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <!-- Avatar Section -->
+                        <div class="text-center mb-4">
+                            <div class="d-inline-block position-relative">
+                                {% if profile.avatar %}
+                                    <img src="{{ profile.avatar.url }}" alt="Current Avatar" class="avatar-preview" id="avatar-preview">
+                                {% else %}
+                                    <div class="avatar-placeholder" id="avatar-placeholder">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                {% endif %}
+                                <label for="id_avatar" class="position-absolute bottom-0 end-0 btn btn-primary btn-sm rounded-circle" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-camera"></i>
+                                </label>
+                            </div>
+                            <div class="mt-2">
+                                <label for="id_avatar" class="form-label">Profile Picture</label>
+                                {{ form.avatar }}
+                                {% if form.avatar.help_text %}
+                                    <div class="help-text">{{ form.avatar.help_text }}</div>
+                                {% endif %}
+                                {% if form.avatar.errors %}
+                                    <div class="text-danger small">{{ form.avatar.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Personal Information -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ user_form.first_name.id_for_label }}" class="form-label required-field">First Name</label>
+                                    {{ user_form.first_name }}
+                                    {% if user_form.first_name.errors %}
+                                        <div class="text-danger small">{{ user_form.first_name.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ user_form.last_name.id_for_label }}" class="form-label required-field">Last Name</label>
+                                    {{ user_form.last_name }}
+                                    {% if user_form.last_name.errors %}
+                                        <div class="text-danger small">{{ user_form.last_name.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ user_form.email.id_for_label }}" class="form-label required-field">Email Address</label>
+                            {{ user_form.email }}
+                            {% if user_form.email.errors %}
+                                <div class="text-danger small">{{ user_form.email.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.phone.id_for_label }}" class="form-label">Phone Number</label>
+                                    {{ form.phone }}
+                                    {% if form.phone.help_text %}
+                                        <div class="help-text">{{ form.phone.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.phone.errors %}
+                                        <div class="text-danger small">{{ form.phone.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.organization.id_for_label }}" class="form-label">Organization</label>
+                                    {{ form.organization }}
+                                    {% if form.organization.help_text %}
+                                        <div class="help-text">{{ form.organization.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.organization.errors %}
+                                        <div class="text-danger small">{{ form.organization.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.website.id_for_label }}" class="form-label">Website</label>
+                            {{ form.website }}
+                            {% if form.website.help_text %}
+                                <div class="help-text">{{ form.website.help_text }}</div>
+                            {% endif %}
+                            {% if form.website.errors %}
+                                <div class="text-danger small">{{ form.website.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.bio.id_for_label }}" class="form-label">Bio</label>
+                            {{ form.bio }}
+                            {% if form.bio.help_text %}
+                                <div class="help-text">{{ form.bio.help_text }}</div>
+                            {% endif %}
+                            {% if form.bio.errors %}
+                                <div class="text-danger small">{{ form.bio.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <a href="{% url 'core:user_profile' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Account Security -->
+            <div class="profile-card card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-shield-alt"></i> Account Security
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Manage your account security settings</p>
+                    <div class="d-grid gap-2 d-md-flex">
+                        <a href="{% url 'password_change' %}" class="btn btn-outline-warning">
+                            <i class="fas fa-key"></i> Change Password
+                        </a>
+                        <a href="#" class="btn btn-outline-info" onclick="alert('Two-factor authentication coming soon!')">
+                            <i class="fas fa-mobile-alt"></i> Two-Factor Auth
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="profile-card card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle"></i> Danger Zone
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">These actions cannot be undone. Please be careful.</p>
+                    <button type="button" class="btn btn-outline-danger" onclick="alert('Account deletion coming soon!')">
+                        <i class="fas fa-trash"></i> Delete Account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Avatar preview functionality
+    const avatarInput = document.getElementById('id_avatar');
+    const avatarPreview = document.getElementById('avatar-preview');
+    const avatarPlaceholder = document.getElementById('avatar-placeholder');
+
+    if (avatarInput) {
+        avatarInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    if (avatarPreview) {
+                        avatarPreview.src = e.target.result;
+                    } else if (avatarPlaceholder) {
+                        // Replace placeholder with preview
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.className = 'avatar-preview';
+                        img.id = 'avatar-preview';
+                        avatarPlaceholder.parentNode.replaceChild(img, avatarPlaceholder);
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+    
+    // Form validation
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const requiredFields = form.querySelectorAll('input[required], select[required], textarea[required]');
+            let isValid = true;
+            
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            });
+            
+            if (!isValid) {
+                e.preventDefault();
+                alert('Please fill in all required fields.');
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

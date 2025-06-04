@@ -1,0 +1,57 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Registration Successful - {{ registration.event.name }}{% endblock %}
+
+{% block content %}
+<div class="col-12">
+    <div class="row justify-content-center mt-3">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                        <h2>Registration Successful!</h2>
+                        <p class="text-muted">Thank you for registering for {{ registration.event.name }}</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h5>Event Details</h5>
+                        <div class="text-muted">
+                            <p><i class="fas fa-calendar-alt me-1"></i>{{ registration.event.start_date }} at {{ registration.event.start_time }}</p>
+                            <p><i class="fas fa-map-marker-alt me-1"></i>{{ registration.event.location }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="qr-code-container mb-4">
+                        {% if registration.qr_code_image %}
+                            <img src="{{ registration.qr_code_image.url }}" alt="QR Code" class="img-fluid border rounded">
+                        {% endif %}
+                        <p class="mt-2"><strong>Your Registration QR Code</strong></p>
+                        <p class="text-muted small">Show this QR code at the event for check-in</p>
+                    </div>
+                      <div class="d-grid gap-2 mb-3">
+                        <a href="{% url 'events:qr_code' registration.unique_id %}" class="btn btn-primary" target="_blank">
+                            <i class="fas fa-qrcode me-1"></i>View Full QR Code
+                        </a>
+                          <a href="{{ whatsapp_share_url }}" class="btn btn-success" target="_blank" rel="noopener">
+                            <i class="fab fa-whatsapp me-1"></i>Share My QR Code to WhatsApp
+                        </a>
+                    </div>
+                      <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Important:</strong> Please save this QR code and bring it to the event for quick check-in.
+                        {% if registration.participant_email %}
+                            <br><small class="text-muted mt-2">
+                                <i class="fas fa-envelope me-1"></i>
+                                <strong>Development Mode:</strong> A confirmation email would be sent to {{ registration.participant_email }} in production. 
+                                Currently, emails are only displayed in the console for development purposes.
+                            </small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

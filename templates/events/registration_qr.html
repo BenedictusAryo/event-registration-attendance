@@ -1,0 +1,344 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}QR Code - {{ registration.participant_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .qr-container {
+        text-align: center;
+        background: white;
+        padding: 40px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        margin: 40px auto;
+        max-width: 500px;
+    }
+    
+    .qr-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px 0;
+        margin-bottom: 30px;
+    }
+    
+    .qr-code-image {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        display: inline-block;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .participant-info {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-top: 20px;
+    }
+    
+    .download-section {
+        background: #e3f2fd;
+        padding: 20px;
+        border-radius: 10px;
+        margin-top: 20px;
+    }
+    
+    .status-badge {
+        font-size: 1rem;
+        padding: 8px 16px;
+    }
+
+    @media print {
+        .no-print {
+            display: none;
+        }
+        
+        .qr-container {
+            box-shadow: none;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .qr-header {
+            background: #333 !important;
+            -webkit-print-color-adjust: exact;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- QR Header -->
+<div class="qr-header no-print">
+    <div class="container">
+        <div class="text-center">
+            <h1 class="display-5 mb-3">Registration QR Code</h1>
+            <p class="lead">{{ registration.participant_name }}</p>
+            <div class="d-flex justify-content-center align-items-center flex-wrap">
+                {% if registration.status == 'attended' %}
+                    <span class="badge bg-success status-badge me-3 mb-2">
+                        <i class="fas fa-check"></i> Attended
+                    </span>
+                {% else %}
+                    <span class="badge bg-warning status-badge me-3 mb-2">
+                        <i class="fas fa-clock"></i> Registered
+                    </span>
+                {% endif %}
+                <span class="badge bg-light text-dark mb-2">
+                    {{ registration.event.name }}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="qr-container">
+        <!-- QR Code -->
+        <div class="qr-code-section">
+            <h3 class="mb-4">
+                <i class="fas fa-qrcode text-primary"></i> Scan for Check-in
+            </h3>
+            
+            <div class="qr-code-image">
+                <img src="data:image/png;base64,{{ registration.qr_code }}" 
+                     alt="Registration QR Code" 
+                     class="img-fluid"
+                     style="max-width: 300px; width: 100%;">
+            </div>
+            
+            <p class="text-muted mt-3">
+                <small>Scan this QR code at the event for quick check-in</small>
+            </p>
+        </div>
+
+        <!-- Participant Information -->
+        <div class="participant-info">
+            <h5 class="mb-3">
+                <i class="fas fa-user text-primary"></i> Participant Details
+            </h5>
+            
+            <div class="row text-start">
+                <div class="col-sm-6">
+                    <p class="mb-2">
+                        <strong>Name:</strong><br>
+                        <span class="text-primary">{{ registration.participant_name }}</span>
+                    </p>
+                </div>
+                <div class="col-sm-6">
+                    <p class="mb-2">
+                        <strong>Email:</strong><br>
+                        <span class="text-secondary">{{ registration.participant_email }}</span>
+                    </p>
+                </div>
+                <div class="col-sm-6">
+                    <p class="mb-2">
+                        <strong>Registration ID:</strong><br>
+                        <code class="text-info">{{ registration.unique_id }}</code>
+                    </p>
+                </div>
+                <div class="col-sm-6">
+                    <p class="mb-2">
+                        <strong>Registered:</strong><br>
+                        <span class="text-muted">{{ registration.registered_at|date:"M d, Y g:i A" }}</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Event Information -->
+        <div class="participant-info">
+            <h5 class="mb-3">
+                <i class="fas fa-calendar-alt text-success"></i> Event Details
+            </h5>
+            
+            <div class="row text-start">
+                <div class="col-12">
+                    <p class="mb-2">
+                        <strong>Event:</strong><br>
+                        <span class="text-primary fs-5">{{ registration.event.name }}</span>
+                    </p>
+                </div>
+                <div class="col-sm-6">
+                    <p class="mb-2">
+                        <strong>Date & Time:</strong><br>
+                        <span class="text-info">{{ registration.event.date|date:"l, F d, Y" }}</span><br>
+                        <span class="text-info">{{ registration.event.date|time:"g:i A" }}</span>
+                    </p>
+                </div>
+                {% if registration.event.location %}
+                <div class="col-sm-6">
+                    <p class="mb-2">
+                        <strong>Location:</strong><br>
+                        <span class="text-danger">{{ registration.event.location }}</span>
+                    </p>
+                </div>
+                {% endif %}
+                <div class="col-sm-6">
+                    <p class="mb-2">
+                        <strong>Organizer:</strong><br>
+                        <span class="text-secondary">{{ registration.event.organizer.get_full_name|default:registration.event.organizer.username }}</span>
+                    </p>
+                </div>
+                {% if registration.attended_at %}
+                <div class="col-sm-6">
+                    <p class="mb-2">
+                        <strong>Check-in Time:</strong><br>
+                        <span class="text-success">{{ registration.attended_at|date:"M d, Y g:i A" }}</span>
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="alert alert-info">
+            <h6 class="alert-heading">
+                <i class="fas fa-info-circle"></i> Instructions
+            </h6>
+            <ul class="mb-0 text-start">
+                <li>Present this QR code at the event check-in desk</li>
+                <li>Event staff will scan the code for quick check-in</li>
+                <li>Keep this accessible on your mobile device</li>
+                <li>You can also print this page if preferred</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Download Section -->
+    <div class="download-section no-print">
+        <div class="row text-center">
+            <div class="col-md-3 mb-3">
+                <button onclick="window.print()" class="btn btn-primary w-100">
+                    <i class="fas fa-print"></i><br>
+                    <small>Print QR Code</small>
+                </button>
+            </div>
+            <div class="col-md-3 mb-3">
+                <button onclick="downloadQR()" class="btn btn-success w-100">
+                    <i class="fas fa-download"></i><br>
+                    <small>Download Image</small>
+                </button>
+            </div>
+            <div class="col-md-3 mb-3">
+                <button onclick="shareQR()" class="btn btn-info w-100">
+                    <i class="fas fa-share"></i><br>
+                    <small>Share QR Code</small>
+                </button>
+            </div>
+            <div class="col-md-3 mb-3">
+                <a href="{% url 'events:registration_detail' registration.pk %}" class="btn btn-outline-secondary w-100">
+                    <i class="fas fa-arrow-left"></i><br>
+                    <small>Back to Details</small>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function downloadQR() {
+    // Get the QR code image
+    const qrImage = document.querySelector('.qr-code-image img');
+    
+    // Create a canvas to combine QR code with text
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Set canvas size
+    canvas.width = 400;
+    canvas.height = 500;
+    
+    // Fill white background
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Add title
+    ctx.fillStyle = 'black';
+    ctx.font = 'bold 20px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('{{ registration.event.name }}', canvas.width/2, 30);
+    
+    // Add participant name
+    ctx.font = '16px Arial';
+    ctx.fillText('{{ registration.participant_name }}', canvas.width/2, 55);
+    
+    // Add QR code image
+    const img = new Image();
+    img.onload = function() {
+        ctx.drawImage(img, 50, 80, 300, 300);
+        
+        // Add footer text
+        ctx.font = '12px Arial';
+        ctx.fillText('Registration ID: {{ registration.unique_id }}', canvas.width/2, 420);
+        ctx.fillText('{{ registration.event.date|date:"M d, Y g:i A" }}', canvas.width/2, 440);
+        
+        // Download the canvas as image
+        const link = document.createElement('a');
+        link.download = '{{ registration.participant_name|slugify }}_qr_code.png';
+        link.href = canvas.toDataURL();
+        link.click();
+    };
+    img.src = qrImage.src;
+}
+
+async function shareQR() {
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: 'Event Registration QR Code',
+                text: 'QR Code for {{ registration.event.name }} - {{ registration.participant_name }}',
+                url: window.location.href
+            });
+        } catch (error) {
+            console.log('Error sharing:', error);
+            copyToClipboard();
+        }
+    } else {
+        copyToClipboard();
+    }
+}
+
+function copyToClipboard() {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(function() {
+        showAlert('success', 'QR code link copied to clipboard!');
+    }).catch(function(err) {
+        console.error('Could not copy text: ', err);
+        
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = url;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        showAlert('success', 'QR code link copied to clipboard!');
+    });
+}
+
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.top = '20px';
+    alertDiv.style.right = '20px';
+    alertDiv.style.zIndex = '9999';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        if (alertDiv) {
+            alertDiv.remove();
+        }
+    }, 3000);
+}
+</script>
+{% endblock %}
