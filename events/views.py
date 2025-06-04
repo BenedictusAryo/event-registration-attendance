@@ -225,7 +225,7 @@ class ParticipantListView(LoginRequiredMixin, DetailView):
 
     def get_queryset(self):
         return Event.objects.filter(organizer=self.request.user)
-
+        
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         registrations = Registration.objects.filter(event=self.object).order_by('-registered_at')
@@ -243,6 +243,10 @@ class ParticipantListView(LoginRequiredMixin, DetailView):
         status = self.request.GET.get('status')
         if status:
             registrations = registrations.filter(status=status)
+        
+        # Count statistics
+        context['total_registrations'] = registrations.count()
+        context['attended_count'] = registrations.filter(status='attended').count()
         
         context['registrations'] = registrations
         context['search'] = search
@@ -264,12 +268,11 @@ class ExportParticipantsView(LoginRequiredMixin, View):
         response['Content-Disposition'] = f'attachment; filename="{event.slug}_participants.csv"'
         
         writer = csv.writer(response)
-        
-        # Header row
+          # Header row
         headers = ['Name', 'Email', 'Phone', 'Status', 'Registered At', 'Attended At']
         # Add custom field headers
-        custom_fields = event.form_fields.all().order_by('order')
-        headers.extend([field.label for field in custom_fields])
+        custom_fields = event.fields.all().order_by('order')
+        headers.extend([field.field_name for field in custom_fields])
         writer.writerow(headers)
         
         # Data rows
@@ -307,11 +310,10 @@ class ExportParticipantsView(LoginRequiredMixin, View):
         header_font = Font(bold=True, color="FFFFFF")
         header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
         header_alignment = Alignment(horizontal="center", vertical="center")
-        
-        # Header row
+          # Header row
         headers = ['Name', 'Email', 'Phone', 'Status', 'Registered At', 'Attended At']
-        custom_fields = event.form_fields.all().order_by('order')
-        headers.extend([field.label for field in custom_fields])
+        custom_fields = event.fields.all().order_by('order')
+        headers.extend([field.field_name for field in custom_fields])
         
         for col_num, header in enumerate(headers, 1):
             cell = ws.cell(row=1, column=col_num, value=header)

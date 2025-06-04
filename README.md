@@ -435,7 +435,7 @@ python manage.py runserver
 ### Architecture
 - **Framework**: Django 5.2.1
 - **Database**: SQLite (development) / PostgreSQL (production ready)
-- **Frontend**: Django Templates + Bootstrap/Tailwind CSS
+- **Frontend**: Django Templates + Bootstrap
 - **QR Codes**: qrcode library with PIL for image generation
 - **File Storage**: Local media files (S3 ready for production)
 

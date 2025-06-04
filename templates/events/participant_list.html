@@ -3,147 +3,150 @@
 {% block title %}Participants - {{ event.name }}{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto">
+<div class="container-fluid">
     <!-- Header -->
-    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-        <div class="flex justify-between items-start">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ event.name }}</h1>
-                <div class="text-sm text-gray-600 space-y-1">
-                    <p><strong>Date:</strong> {{ event.start_date }} to {{ event.end_date }}</p>
-                    <p><strong>Location:</strong> {{ event.location }}</p>
-                    <p><strong>Time:</strong> {{ event.start_time }} - {{ event.end_time }}</p>
-                </div>
-            </div>
-            <div class="text-right">
-                <div class="text-2xl font-bold text-blue-600">{{ total_registrations }}</div>
-                <div class="text-sm text-gray-600">Total Registrations</div>
-                <div class="text-lg font-semibold text-green-600 mt-2">{{ attended_count }}</div>
-                <div class="text-sm text-gray-600">Attended</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Actions -->
-    <div class="bg-white rounded-lg shadow-md p-4 mb-6">
-        <div class="flex flex-wrap gap-4 items-center justify-between">            <div class="flex flex-wrap gap-3">
-                <a href="{% url 'events:export_participants' event.pk %}" 
-                   class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                    Export CSV
-                </a>
-                <a href="{% url 'checkin:qr_scanner' event.pk %}" 
-                   class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 16h4.01M4 8h4.01M8 12h4.01m0 0V8a4 4 0 118 0v4m-12 4h.01M16 8h4.01"></path>
-                    </svg>
-                    QR Scanner
-                </a>
-            </div>
-            
-            <!-- Search -->
-            <div class="flex-1 max-w-md">
-                <div class="relative">
-                    <input type="text" id="search-input" placeholder="Search participants..." 
-                           class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row align-items-start">
+                <div class="col-md-8">
+                    <h1 class="h3 mb-3">{{ event.name }}</h1>
+                    <div class="text-muted small">
+                        <p><strong>Date:</strong> {{ event.start_date }} to {{ event.end_date }}</p>
+                        <p><strong>Location:</strong> {{ event.location }}</p>
+                        <p><strong>Time:</strong> {{ event.start_time }} - {{ event.end_time }}</p>
                     </div>
                 </div>
+                <div class="col-md-4 text-end">
+                    <div class="text-primary h4 mb-1">{{ total_registrations }}</div>
+                    <div class="text-muted small">Total Registrations</div>
+                    <div class="text-success h5 mt-2 mb-1">{{ attended_count }}</div>
+                    <div class="text-muted small">Attended</div>
+                </div>
             </div>
         </div>
-    </div>
-
-    <!-- Participants List -->
-    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+    </div>    <!-- Actions -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{% url 'events:export_participants' event.pk %}?format=csv" 
+                           class="btn btn-success btn-sm">
+                            <i class="fas fa-file-csv me-1"></i>
+                            Export CSV
+                        </a>
+                        <a href="{% url 'events:export_participants' event.pk %}?format=excel" 
+                           class="btn btn-info btn-sm">
+                            <i class="fas fa-file-excel me-1"></i>
+                            Export Excel
+                        </a>
+                        <a href="{% url 'checkin:qr_scanner' event.pk %}" 
+                           class="btn btn-primary btn-sm">
+                            <i class="fas fa-qrcode me-1"></i>
+                            QR Scanner
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <!-- Search -->
+                    <form method="get" action="{% url 'events:participant_list' event.pk %}">
+                        <div class="input-group">
+                            <input type="text" id="search-input" name="search" value="{{ search|default:'' }}" 
+                                   placeholder="Search participants..." class="form-control form-control-sm">
+                            <button type="submit" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                        {% if search %}
+                        <div class="mt-2">
+                            <a href="{% url 'events:participant_list' event.pk %}" class="text-decoration-none small">
+                                <i class="fas fa-times me-1"></i>Clear search
+                            </a>
+                        </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Status Filter -->
+            <div class="row mt-3">
+                <div class="col-md-3">
+                    <form method="get" action="{% url 'events:participant_list' event.pk %}">
+                        {% if search %}<input type="hidden" name="search" value="{{ search }}">{% endif %}
+                        <select name="status" onchange="this.form.submit()" class="form-select form-select-sm">
+                            <option value="">All Status</option>
+                            <option value="pending" {% if status == 'pending' %}selected{% endif %}>Registered</option>
+                            <option value="attended" {% if status == 'attended' %}selected{% endif %}>Attended</option>
+                            <option value="cancelled" {% if status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                        </select>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>    <!-- Participants List -->
+    <div class="card">
         {% if registrations %}
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Participant
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Contact
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Registration Date
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Status
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Actions
-                            </th>
+                            <th scope="col">Participant</th>
+                            <th scope="col">Contact</th>
+                            <th scope="col">Registration Date</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200" id="participants-table">
+                    <tbody>
                         {% for registration in registrations %}
-                        <tr class="participant-row" data-search="{{ registration.participant_name|lower }} {{ registration.participant_email|lower }}">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <div class="flex-shrink-0 h-10 w-10">
-                                        <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                                            <span class="text-sm font-medium text-blue-600">
-                                                {{ registration.participant_name|first|upper }}
-                                            </span>
-                                        </div>
+                        <tr class="participant-row">
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                         style="width: 40px; height: 40px;">
+                                        <span class="text-white fw-bold">
+                                            {{ registration.participant_name|first|upper }}
+                                        </span>
                                     </div>
-                                    <div class="ml-4">
-                                        <div class="text-sm font-medium text-gray-900">
-                                            {{ registration.participant_name }}
-                                        </div>
-                                        <div class="text-sm text-gray-500">
-                                            ID: {{ registration.unique_id|truncatechars:8 }}
-                                        </div>
+                                    <div>
+                                        <div class="fw-semibold">{{ registration.participant_name }}</div>
+                                        <div class="text-muted small">ID: {{ registration.unique_id|truncatechars:8 }}</div>
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">{{ registration.participant_email }}</div>
+                            <td>
+                                <div class="fw-semibold">{{ registration.participant_email }}</div>
                                 {% if registration.participant_phone %}
-                                    <div class="text-sm text-gray-500">{{ registration.participant_phone }}</div>
+                                    <div class="text-muted small">{{ registration.participant_phone }}</div>
                                 {% endif %}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {{ registration.registered_at|date:"M d, Y" }}
-                                <br>
-                                <span class="text-xs text-gray-400">{{ registration.registered_at|time:"H:i" }}</span>
+                            <td>
+                                <div>{{ registration.registered_at|date:"M d, Y" }}</div>
+                                <div class="text-muted small">{{ registration.registered_at|time:"H:i" }}</div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td>
                                 {% if registration.status == 'attended' %}
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                                        </svg>
-                                        Attended
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check me-1"></i>Attended
                                     </span>
                                     {% if registration.attended_at %}
-                                        <div class="text-xs text-gray-500 mt-1">
+                                        <div class="text-muted small mt-1">
                                             {{ registration.attended_at|date:"M d, H:i" }}
                                         </div>
                                     {% endif %}
                                 {% elif registration.status == 'cancelled' %}
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                        Cancelled
-                                    </span>
+                                    <span class="badge bg-danger">Cancelled</span>
                                 {% else %}
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                        Registered
-                                    </span>
+                                    <span class="badge bg-warning">Registered</span>
                                 {% endif %}
-                            </td>                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <div class="flex space-x-2">
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2">
                                     <a href="{% url 'events:registration_detail' registration.pk %}" 
-                                       class="text-blue-600 hover:text-blue-900">View</a>
+                                       class="btn btn-outline-primary btn-sm">View</a>
                                     {% if registration.status != 'attended' %}
                                         <button onclick="markAttended('{{ registration.unique_id }}')" 
-                                                class="text-green-600 hover:text-green-900">Mark Attended</button>
+                                                class="btn btn-outline-success btn-sm">Mark Attended</button>
                                     {% endif %}
                                 </div>
                             </td>
@@ -153,18 +156,14 @@
                 </table>
             </div>
         {% else %}
-            <div class="text-center py-12">
-                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                <h3 class="mt-2 text-sm font-medium text-gray-900">No registrations yet</h3>
-                <p class="mt-1 text-sm text-gray-500">
-                    No one has registered for this event yet.
-                </p>
-                <div class="mt-6">
-                    <a href="{% url 'events:registration_form' event.slug %}" 
-                       class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-                        View Registration Form
+            <div class="card-body text-center py-5">
+                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No registrations yet</h5>
+                <p class="text-muted">No one has registered for this event yet.</p>
+                <div class="mt-3">
+                    <a href="{% url 'events:event_register' event.slug %}" 
+                       class="btn btn-primary">
+                        <i class="fas fa-external-link-alt me-1"></i>View Registration Form
                     </a>
                 </div>
             </div>
@@ -173,21 +172,6 @@
 </div>
 
 <script>
-// Search functionality
-document.getElementById('search-input').addEventListener('input', function(e) {
-    const searchTerm = e.target.value.toLowerCase();
-    const rows = document.querySelectorAll('.participant-row');
-    
-    rows.forEach(row => {
-        const searchData = row.getAttribute('data-search');
-        if (searchData.includes(searchTerm)) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
-        }
-    });
-});
-
 // Mark attended functionality
 async function markAttended(registrationId) {
     try {
@@ -195,7 +179,7 @@ async function markAttended(registrationId) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value || getCookie('csrftoken')
+                'X-CSRFToken': getCookie('csrftoken')
             },
             body: JSON.stringify({
                 'qr_code': registrationId
