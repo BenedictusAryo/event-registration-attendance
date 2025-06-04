@@ -170,6 +170,35 @@ class Registration(models.Model):
             self.generate_qr_code()
         super().save(*args, **kwargs)
 
+    @property
+    def qr_code(self):
+        """Generate base64 encoded QR code for this registration"""
+        import base64
+        
+        # Generate QR code
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(str(self.unique_id))
+        qr.make(fit=True)
+
+        # Create QR code image
+        qr_img = qr.make_image(fill_color="black", back_color="white")
+        
+        # Convert to RGB if necessary
+        if qr_img.mode != 'RGB':
+            qr_img = qr_img.convert('RGB')
+
+        # Convert to base64
+        buffer = BytesIO()
+        qr_img.save(buffer, format='PNG')
+        buffer.seek(0)
+        
+        return base64.b64encode(buffer.getvalue()).decode('utf-8')
+
     def generate_qr_code(self):
         """Generate QR code for this registration"""
         qr_data = str(self.unique_id)
