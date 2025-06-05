@@ -43,10 +43,9 @@
     </style>
     {% block extra_css %}{% endblock %}
 </head>
-<body>
-    <!-- Navigation -->
+<body>    <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
+        <div class="container-xl">
             <a class="navbar-brand" href="{% url 'events:event_list' %}">
                 <i class="fas fa-calendar-check me-2"></i>
                 Event Manager
@@ -63,15 +62,9 @@
                             <a class="nav-link" href="{% url 'events:event_list' %}">
                                 <i class="fas fa-calendar me-1"></i>My Events
                             </a>
-                        </li>
-                        <li class="nav-item">
+                        </li>                        <li class="nav-item">
                             <a class="nav-link" href="{% url 'events:event_create' %}">
                                 <i class="fas fa-plus me-1"></i>Create Event
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'checkin:checkin_home' %}">
-                                <i class="fas fa-qrcode me-1"></i>Check-in
                             </a>
                         </li>
                     {% endif %}
@@ -107,10 +100,8 @@
                 </ul>
             </div>
         </div>
-    </nav>
-
-    <!-- Main Content -->
-    <div class="container-fluid">
+    </nav>    <!-- Main Content -->
+    <div class="container-xl px-4">
         {% if messages %}
             <div class="row mt-3">
                 <div class="col-12">

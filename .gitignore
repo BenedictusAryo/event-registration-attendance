@@ -196,3 +196,8 @@ cython_debug/
 # images
 *.png
 *.jpg
+
+# Certificates
+*.crt
+*.cnf
+*.key

@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-cepcl#2s!48f!)52sh46u58)dumzi0)o3&u1t-jd378q(0_0+z
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 # Site URL for QR code generation
 SITE_URL = 'http://127.0.0.1:8000'
@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # Third party apps
+    'django_extensions',
     # Custom apps
     'core',
     'events',

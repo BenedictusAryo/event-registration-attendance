@@ -239,10 +239,30 @@ startScanBtn.addEventListener('click', async function() {
         stopScanBtn.style.display = 'inline-block';
         
         scanQRCode();
-        
-    } catch (err) {
+          } catch (err) {
         console.error('Error accessing camera:', err);
-        alert('Error accessing camera. Please make sure you have granted camera permissions.');
+        let errorMessage = 'Error accessing camera. ';
+        
+        if (err.name === 'NotAllowedError') {
+            errorMessage += 'Camera permission denied. Please allow camera access and try again.';
+        } else if (err.name === 'NotFoundError') {
+            errorMessage += 'No camera found on this device.';
+        } else if (err.name === 'NotSupportedError') {
+            errorMessage += 'Camera not supported on this browser.';
+        } else if (location.protocol !== 'https:') {
+            errorMessage += 'Camera access requires HTTPS. Please use https:// instead of http://';
+        } else {
+            errorMessage += 'Please make sure you have granted camera permissions and are using HTTPS.';
+        }
+        
+        alert(errorMessage);
+        
+        // Show additional help for mobile users
+        if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+            setTimeout(() => {
+                alert('📱 Mobile Help: If you see "Certificate not trusted" warnings, tap "Advanced" > "Proceed anyway" to use the camera.');
+            }, 2000);
+        }
     }
 });
 
@@ -274,9 +294,9 @@ function scanQRCode() {
         
         const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
         const code = jsQR(imageData.data, imageData.width, imageData.height);
-        
-        if (code) {
+          if (code) {
             console.log('QR Code detected:', code.data);
+            stopScanning();
             processQRCode(code.data);
             return;
         }
@@ -438,9 +458,8 @@ document.getElementById('scanAnotherBtn').addEventListener('click', function() {
     statusCard.style.display = 'none';
     document.getElementById('qrCodeInput').value = '';
     
-    if (!scanning) {
-        startScanBtn.click();
-    }
+    // Always start scanning when "Scan Another" is clicked
+    startScanBtn.click();
 });
 
 // CSRF Cookie function
