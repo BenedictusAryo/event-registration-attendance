@@ -184,10 +184,17 @@
                                     {{ registration.event.name }}
                                 </a>
                             </p>
-                        </div>
-                        <div class="col-md-6">
+                        </div>                        <div class="col-md-6">
                             <p><strong><i class="fas fa-clock text-info"></i> Date & Time:</strong></p>
-                            <p class="ms-3">{{ registration.event.date|date:"l, F d, Y g:i A" }}</p>
+                            <p class="ms-3">
+                                {% if registration.event.start_date == registration.event.end_date %}
+                                    {{ registration.event.start_date|date:"l, F d, Y" }}
+                                {% else %}
+                                    {{ registration.event.start_date|date:"F d, Y" }} - {{ registration.event.end_date|date:"F d, Y" }}
+                                {% endif %}
+                                <br>
+                                {{ registration.event.start_time|time:"g:i A" }} - {{ registration.event.end_time|time:"g:i A" }}
+                            </p>
                         </div>
                         {% if registration.event.location %}
                         <div class="col-md-6">

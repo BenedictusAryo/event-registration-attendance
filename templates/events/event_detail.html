@@ -73,15 +73,14 @@
         <div class="row align-items-center">
             <div class="col-lg-8">
                 <h1 class="display-4 mb-3">{{ event.name }}</h1>
-                <p class="lead mb-4">{{ event.description|truncatewords:30 }}</p>
-                <div class="d-flex flex-wrap align-items-center">
+                <p class="lead mb-4">{{ event.description|truncatewords:30 }}</p>                <div class="d-flex flex-wrap align-items-center">
                     <span class="badge bg-light text-dark me-3 mb-2">
                         <i class="fas fa-calendar"></i> 
-                        {{ event.date|date:"F d, Y" }}
+                        {{ event.start_date|date:"F d, Y" }}
                     </span>
                     <span class="badge bg-light text-dark me-3 mb-2">
                         <i class="fas fa-clock"></i> 
-                        {{ event.date|time:"g:i A" }}
+                        {{ event.start_time|time:"g:i A" }}
                     </span>
                     {% if event.location %}
                     <span class="badge bg-light text-dark me-3 mb-2">
@@ -120,10 +119,17 @@
                 </div>
                 <div class="card-body">
                     <div class="event-meta">
-                        <div class="row">
-                            <div class="col-md-6">
+                        <div class="row">                            <div class="col-md-6">
                                 <p><strong><i class="fas fa-calendar text-primary"></i> Date & Time:</strong></p>
-                                <p class="ms-3">{{ event.date|date:"l, F d, Y" }} at {{ event.date|time:"g:i A" }}</p>
+                                <p class="ms-3">
+                                    {% if event.start_date == event.end_date %}
+                                        {{ event.start_date|date:"l, F d, Y" }}
+                                    {% else %}
+                                        {{ event.start_date|date:"F d, Y" }} - {{ event.end_date|date:"F d, Y" }}
+                                    {% endif %}
+                                    <br>
+                                    {{ event.start_time|time:"g:i A" }} - {{ event.end_time|time:"g:i A" }}
+                                </p>
                             </div>
                             {% if event.location %}
                             <div class="col-md-6">

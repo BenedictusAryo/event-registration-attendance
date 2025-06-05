@@ -160,11 +160,16 @@
                         <span class="text-primary fs-5">{{ registration.event.name }}</span>
                     </p>
                 </div>
-                <div class="col-sm-6">
-                    <p class="mb-2">
+                <div class="col-sm-6">                    <p class="mb-2">
                         <strong>Date & Time:</strong><br>
-                        <span class="text-info">{{ registration.event.date|date:"l, F d, Y" }}</span><br>
-                        <span class="text-info">{{ registration.event.date|time:"g:i A" }}</span>
+                        <span class="text-info">
+                            {% if registration.event.start_date == registration.event.end_date %}
+                                {{ registration.event.start_date|date:"l, F d, Y" }}
+                            {% else %}
+                                {{ registration.event.start_date|date:"F d, Y" }} - {{ registration.event.end_date|date:"F d, Y" }}
+                            {% endif %}
+                        </span><br>
+                        <span class="text-info">{{ registration.event.start_time|time:"g:i A" }} - {{ registration.event.end_time|time:"g:i A" }}</span>
                     </p>
                 </div>
                 {% if registration.event.location %}
@@ -270,11 +275,10 @@ function downloadQR() {
     const img = new Image();
     img.onload = function() {
         ctx.drawImage(img, 50, 80, 300, 300);
-        
-        // Add footer text
+          // Add footer text
         ctx.font = '12px Arial';
         ctx.fillText('Registration ID: {{ registration.unique_id }}', canvas.width/2, 420);
-        ctx.fillText('{{ registration.event.date|date:"M d, Y g:i A" }}', canvas.width/2, 440);
+        ctx.fillText('{{ registration.event.start_date|date:"M d, Y" }} at {{ registration.event.start_time|time:"g:i A" }}', canvas.width/2, 440);
         
         // Download the canvas as image
         const link = document.createElement('a');

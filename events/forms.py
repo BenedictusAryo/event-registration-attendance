@@ -1,5 +1,4 @@
 from django import forms
-from django.contrib.auth.models import User
 from .models import Event, EventField, Registration, RegistrationFormFieldData
 import json
 
@@ -7,13 +6,14 @@ class EventForm(forms.ModelForm):
     class Meta:
         model = Event
         fields = [
-            'name', 'description', 'start_date', 'end_date', 
+            'name', 'description', 'image', 'start_date', 'end_date', 
             'start_time', 'end_time', 'location', 'is_published',
             'registration_open_date', 'registration_close_date'
         ]
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter event name'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Enter event description'}),
+            'image': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'start_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'end_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'start_time': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
