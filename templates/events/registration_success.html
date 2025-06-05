@@ -60,7 +60,7 @@
 function shareQRCodeWhatsApp() {
     const eventName = `{{ registration.event.name|escapejs }}`;
     const participantName = `{{ registration.participant_name|escapejs }}`;
-    const qrCodeUrl = `{{ request.build_absolute_uri }}{% url 'events:qr_code' registration.unique_id %}`;
+    const qrCodeUrl = `{{ request.scheme }}://{{ request.get_host }}{% url 'events:qr_code' registration.unique_id %}`;
     
     // Create WhatsApp message with proper line breaks
     const message = `🎟️ Here's my registration for *${eventName}*\n\nParticipant: ${participantName}\n\n📱 QR Code: ${qrCodeUrl}`;
