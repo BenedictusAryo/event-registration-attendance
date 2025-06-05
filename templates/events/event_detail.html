@@ -361,9 +361,7 @@
                 <h5 class="mb-3">
                     <i class="fas fa-share-alt"></i> Share Event
                 </h5>
-                <div class="d-grid gap-2">
-                    <a href="https://wa.me/?text=Check%20out%20this%20event:%20{{ event.name|urlencode }}%20{{ request.build_absolute_uri|urlencode }}{{ event.registration_url|urlencode }}" 
-                       target="_blank" class="btn btn-success btn-sm">
+                <div class="d-grid gap-2">                    <a href="#" onclick="shareEventWhatsApp()" class="btn btn-success btn-sm">
                         <i class="fab fa-whatsapp"></i> Share on WhatsApp
                     </a>
                     <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri|urlencode }}{{ event.registration_url|urlencode }}" 
@@ -406,6 +404,23 @@ function copyToClipboard() {
         console.error('Could not copy text: ', err);
         alert('Failed to copy link to clipboard');
     });
+}
+
+function shareEventWhatsApp() {
+    const eventName = `{{ event.name|escapejs }}`;
+    const eventDate = `{{ event.start_date|date:'M d, Y' }}`;
+    const eventLocation = `{{ event.location|escapejs }}`;
+    const registrationUrl = `{{ request.build_absolute_uri }}{{ event.registration_url }}`;
+    
+    // Create WhatsApp message with proper line breaks
+    const message = `🎯 Check out this event:\n\n*${eventName}*\n\n📅 ${eventDate}\n📍 ${eventLocation}\n\n🔗 Register here:\n${registrationUrl}`;
+    
+    // Encode the message for WhatsApp
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
+    
+    // Open WhatsApp
+    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
 }
 </script>
 {% endblock %}

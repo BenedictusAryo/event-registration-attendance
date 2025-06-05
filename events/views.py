@@ -201,9 +201,8 @@ class RegistrationSuccessView(DetailView):
         qr_code_url = self.request.build_absolute_uri(
             reverse('events:qr_code', kwargs={'unique_id': registration.unique_id})
         )
-        
-        # Create WhatsApp sharing text
-        whatsapp_text = f"Here's my registration for {registration.event.name}: {qr_code_url}"
+          # Create WhatsApp sharing text with proper formatting for clickable links
+        whatsapp_text = f"🎟️ Here's my registration for *{registration.event.name}*\n\n📱 QR Code: {qr_code_url}"
         
         # WhatsApp sharing URL
         context['whatsapp_share_url'] = f"https://wa.me/?text={quote(whatsapp_text)}"

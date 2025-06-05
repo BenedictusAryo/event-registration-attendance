@@ -32,10 +32,9 @@
                       <div class="d-grid gap-2 mb-3">
                         <a href="{% url 'events:qr_code' registration.unique_id %}" class="btn btn-primary" target="_blank">
                             <i class="fas fa-qrcode me-1"></i>View Full QR Code
-                        </a>
-                          <a href="{{ whatsapp_share_url }}" class="btn btn-success" target="_blank" rel="noopener">
+                        </a>                          <button onclick="shareQRCodeWhatsApp()" class="btn btn-success">
                             <i class="fab fa-whatsapp me-1"></i>Share My QR Code to WhatsApp
-                        </a>
+                        </button>
                     </div>
                       <div class="alert alert-info">
                         <i class="fas fa-info-circle me-2"></i>
@@ -54,4 +53,24 @@
     </div>
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function shareQRCodeWhatsApp() {
+    const eventName = `{{ registration.event.name|escapejs }}`;
+    const participantName = `{{ registration.participant_name|escapejs }}`;
+    const qrCodeUrl = `{{ request.build_absolute_uri }}{% url 'events:qr_code' registration.unique_id %}`;
+    
+    // Create WhatsApp message with proper line breaks
+    const message = `🎟️ Here's my registration for *${eventName}*\n\nParticipant: ${participantName}\n\n📱 QR Code: ${qrCodeUrl}`;
+    
+    // Encode the message for WhatsApp
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
+    
+    // Open WhatsApp
+    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+}
+</script>
 {% endblock %}
