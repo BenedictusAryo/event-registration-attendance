@@ -230,3 +230,6 @@ ssl/
 # OS specific files
 .DS_Store
 Thumbs.db
+
+# Zipped files
+*.zip

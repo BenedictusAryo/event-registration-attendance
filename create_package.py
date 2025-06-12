@@ -188,12 +188,12 @@ python manage.py createsuperuser --settings=event_registration_attendance.settin
     # Get file size
     zip_size = Path(zip_filename).stat().st_size / (1024 * 1024)  # MB
     
-    print(f"\n🎉 Deployment package created successfully!")
+    print("\n🎉 Deployment package created successfully!")
     print(f"📦 Package: {zip_filename}")
     print(f"📊 Size: {zip_size:.1f} MB")
     print(f"📁 Files copied: {copied_files}")
     print(f"🚫 Files skipped: {skipped_files}")
-      print(f"\n📋 Next steps:")
+    print("\n📋 Next steps:")
     print(f"1. Upload {zip_filename} to your cPanel File Manager")
     print("2. Extract the ZIP file in your domain's public_html folder")
     print("3. Follow the DEPLOYMENT_CHECKLIST.md inside the package")

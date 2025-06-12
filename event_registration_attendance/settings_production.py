@@ -9,6 +9,21 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Load environment variables from .env file
+def load_env_file():
+    """Load environment variables from .env file"""
+    env_file = BASE_DIR / '.env'
+    if env_file.exists():
+        with open(env_file, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, value = line.split('=', 1)
+                    os.environ.setdefault(key.strip(), value.strip())
+
+# Load environment variables
+load_env_file()
+
 # SECURITY WARNING: keep the secret key used in production secret!
 # Generate a new secret key for production using:
 # python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
@@ -17,11 +32,11 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-change-me-in-producti
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-# Add your domain here - Update with your actual domain
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+# Add your domain here - HARDCODED for immediate fix
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'event.parokibintaro.org', 'www.event.parokibintaro.org', '*.parokibintaro.org']
 
 # Site URL for QR code generation - Update with your domain
-SITE_URL = os.environ.get('SITE_URL', 'https://your-domain.com')
+SITE_URL = os.environ.get('SITE_URL', 'https://event.parokibintaro.org')
 
 # Application definition
 INSTALLED_APPS = [
@@ -129,14 +144,18 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # Email configuration for production
-# Update these settings with your hosting provider's SMTP configuration
+# Supports both TLS (port 587) and SSL (port 465) configurations
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.your-hosting-provider.com')
-EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'your-email@your-domain.com')
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'papandayan.iixcp.rumahweb.net')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '465'))
+
+# Support both TLS and SSL based on environment variables
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'False').lower() == 'true'
+EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL', 'True').lower() == 'true'
+
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'admin@event.parokibintaro.org')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'your-email-password')
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@your-domain.com')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'Event Registration Paroki Bintaro <admin@event.parokibintaro.org>')
 
 # Login URLs
 LOGIN_URL = '/auth/login/'
@@ -150,32 +169,55 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 QR_CODE_DIR = 'qr_codes'
 
 # Security settings for production
+# Temporarily disable strict HTTPS settings for initial deployment
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = 'same-origin'
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
-SECURE_SSL_REDIRECT = True
-SECURE_HSTS_SECONDS = 31536000
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
+# Comment out these settings until HTTPS is properly configured
+# SESSION_COOKIE_SECURE = True  
+# CSRF_COOKIE_SECURE = True
+# SECURE_SSL_REDIRECT = True
+# SECURE_HSTS_SECONDS = 31536000
+# SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+# SECURE_HSTS_PRELOAD = True
 
-# Logging configuration for production
+# Logging configuration for production - Enhanced for debugging
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{levelname}] {asctime} {name} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+    },
     'handlers': {
         'file': {
-            'level': 'ERROR',
+            'level': 'DEBUG',
             'class': 'logging.FileHandler',
             'filename': BASE_DIR / 'logs' / 'django.log',
+            'formatter': 'verbose',
         },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['file', 'console'],
+        'level': 'DEBUG',
     },
     'loggers': {
         'django': {
-            'handlers': ['file'],
-            'level': 'ERROR',
-            'propagate': True,
+            'handlers': ['file', 'console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['file', 'console'],
+            'level': 'DEBUG',
+            'propagate': False,
         },
     },
 }
