@@ -338,7 +338,7 @@ async function checkinParticipant() {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': getCookie('csrftoken')
             },
-            body: JSON.stringify({ registration_id: {{ registration.id }} })
+            body: JSON.stringify({ registration_id: "{{ registration.id }}" })
         });
         
         const data = await response.json();

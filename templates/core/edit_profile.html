@@ -5,13 +5,6 @@
 
 {% block extra_css %}
 <style>
-    .profile-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 40px 0;
-        margin-bottom: 30px;
-    }
-    
     .profile-card {
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         border: none;
@@ -44,33 +37,32 @@
     .form-group {
         margin-bottom: 1.5rem;
     }
-    
-    .form-label {
+      .form-label {
         font-weight: 600;
         margin-bottom: 0.5rem;
-        color: #495057;
+        color: var(--text-color, #495057);
     }
     
     .form-control:focus {
-        border-color: #667eea;
-        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        border-color: var(--primary-color, #2B0A0A);
+        box-shadow: 0 0 0 0.2rem rgba(43, 10, 10, 0.25);
     }
     
     .btn-primary {
-        background: linear-gradient(45deg, #667eea, #764ba2);
+        background: linear-gradient(45deg, var(--primary-color, #2B0A0A), var(--secondary-color, #791501));
         border: none;
         padding: 12px 30px;
         font-weight: 600;
     }
     
     .btn-primary:hover {
-        background: linear-gradient(45deg, #5a6fd8, #6b42a0);
+        background: linear-gradient(45deg, var(--secondary-color, #791501), var(--accent-color, #C52000));
         transform: translateY(-1px);
     }
     
     .required-field::after {
         content: " *";
-        color: #dc3545;
+        color: var(--danger-color, #C52000);
     }
     
     .help-text {
