@@ -237,17 +237,16 @@
                                     </a>
                                 </div>
                             {% endif %}
-                            
-                            <!-- Secondary CTAs: QR Scanner -->
+                              <!-- Secondary CTAs: QR Scanner -->
                             <div class="mb-3">
-                                <a href="{% url 'checkin:qr_scanner' event.pk %}" class="btn btn-warning">
+                                <a href="{% url 'checkin:qr_scanner' event.pk %}" class="btn btn-warning btn-lg">
                                     <i class="fas fa-qrcode"></i> QR Scanner
                                 </a>
                             </div>
                             
                             <!-- Tertiary CTAs: View Participants -->
                             <div class="mb-3">
-                                <a href="{% url 'checkin:participants' event.pk %}" class="btn btn-success">
+                                <a href="{% url 'checkin:participants' event.pk %}" class="btn btn-success btn-lg">
                                     <i class="fas fa-users"></i> View Participants
                                 </a>
                             </div>
