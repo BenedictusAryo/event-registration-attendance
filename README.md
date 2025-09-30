@@ -1,461 +1,572 @@
-# event-registration-attendance ✅ FULLY IMPLEMENTED
-
-Technical Document: Event Registration & QR Code Check-in Web Application
-
-## 🎉 Implementation Status: COMPLETE & FUNCTIONAL
-
-✅ **ALL CORE FEATURES IMPLEMENTED AND TESTED**
-✅ **FULL END-TO-END WORKFLOW WORKING**
-✅ **URL ROUTING ISSUES RESOLVED**
-✅ **DATABASE SETUP COMPLETE WITH TEST DATA**
-✅ **QR CODE GENERATION & SCANNING FUNCTIONAL**
-
-## Current Status (Updated: June 4, 2025)
-
-The Django Event Registration & Attendance system is now **fully functional** with the following confirmed working features:
-
-### ✅ Completed & Verified:
-- **Event Management**: Create, edit, delete, and publish events
-- **Dynamic Form Builder**: Custom registration forms with multiple field types
-- **Flexible Participant Identification**: Configurable field marking for names, emails, and phone numbers
-- **User Registration**: Public registration forms with validation
-- **QR Code Generation**: Automatic QR code creation for each registration
-- **Email Notifications**: Development-ready email system (console backend)
-- **WhatsApp Sharing**: Share QR codes directly to WhatsApp
-- **Participant Management**: View, search, and export participant lists
-- **QR Code Scanning**: Web-based QR scanner for attendance tracking
-- **Attendance Management**: Mark participants as attended via QR scanning
-- **User Authentication**: Login system for event organizers
-- **Database Integration**: Complete with test data (1 event, 3 registrations)
-- **Template System**: All pages rendering correctly with modern UI
-
-### 🎯 Recent Enhancements:
-- **Participant Identification System**: Replace hardcoded field matching with flexible, organizer-controlled field marking
-- **QR Code Issue Resolution**: Fixed "N/A" display by implementing database-driven participant name identification
-- **Email Configuration**: Development-mode email notifications with clear production guidance
-- **Form Builder Improvements**: Visual indicators for participant identifier fields
-- **Internationalization Support**: System works with any language field names (tested with Indonesian "nama" field)
-
-### 🎯 Test Data Available:
-- **Admin User**: admin / admin123
-- **Sample Event**: "Tech Conference 2025" with registration form
-- **Test Registrations**: 3 participants with generated QR codes
-- **QR Code Files**: Generated and stored in media/qr_codes/
-
-### 🚀 Access Points:
-- **Main Application**: http://127.0.0.1:8000/
-- **Admin Panel**: http://127.0.0.1:8000/admin/
-- **Event List**: http://127.0.0.1:8000/events/
-- **Sample Registration**: http://127.0.0.1:8000/events/tech-conference-2025/register/
-- **QR Scanner**: http://127.0.0.1:8000/checkin/1/scanner/
-
-# 2. Application Scope & Core Features ✅ DONE
-
-The application will encompass the following key functionalities:
-
-✅ **Event Creation & Management**: Organizers can create new events, define event details (name, date, location, description), and build custom registration forms.
-✅ **Dynamic Form Builder**: Ability for organizers to define various field types (text, number, email, date, etc.) for the registration form, including marking fields as required.
-**Event Publishing**: Generate a unique public registration URL for each published event.
-**Participant Registration**: Public-facing form for attendees to register for an event.
-✅ **Unique QR Code Generation**: Upon successful registration, a unique QR code will be generated for each participant.
-**QR Code Display & Sharing**: Participants can view, download, and share their QR code via WhatsApp.
-**Participant List Management (Organizer View)**: Organizers can view a list of all registered participants for a specific event, filter, search, and export data.
-**QR Code Check-in (Organizer Tool)**: A web-based tool for organizers to scan participant QR codes using a device's camera for efficient check-in.
-**Attendance Tracking**: Update participant status to "Attended" upon successful check-in.
-
-# 3. Technology Stack ✅ DONE
-
-✅ **Backend Framework**: Django (Python)
-✅ **Database**: SQLite (for development), PostgreSQL (recommended for production)
-✅ **Frontend (Templating)**: Django Templates with HTML, CSS (e.g., Tailwind for styling), and Vanilla JavaScript
-**JavaScript Libraries**:
-- html5-qrcode or zxing-js/library: For QR code scanning via camera in the check-in interface.
-✅ **Python Libraries**:
-- Pillow: For image manipulation (if custom image processing for QR codes is needed).
-- qrcode: For generating QR code images.
-- django-widget-tweaks: (Optional, but recommended) For easy styling of Django forms.
-- django-crispy-forms: (Optional) For more structured and beautiful forms.
-
-# 4. Application Structure (Conceptual) ✅ DONE
-
-The application follows a standard Django project structure with multiple apps for logical separation of concerns:
-
-```
-event-registration-attendance/
-├── manage.py
-├── event_registration_attendance/
-│   ├── settings.py ✅
-│   ├── urls.py ✅
-│   ├── wsgi.py
-│   └── asgi.py
-├── core/ ✅                   # Core utilities, common models (e.g., UserProfile)
-│   ├── models.py ✅          # UserProfile model
-│   ├── views.py
-│   ├── urls.py
-│   └── templates/
-├── events/ ✅                 # Handles Event creation, management, and forms
-│   ├── models.py ✅          # Event, EventField, Registration, RegistrationFormFieldData
-│   ├── views.py              # Event creation, form builder, participant list
-│   ├── urls.py
-│   ├── forms.py              # Django forms for event creation, dynamic forms
-│   ├── admin.py              # Django admin configurations
-│   └── templates/events/
-│       ├── event_create.html
-│       ├── event_detail.html (for organizers)
-│       ├── registration_form.html (public-facing)
-│       └── participant_list.html
-├── checkin/ ✅               # Handles QR code scanning and check-in logic
-│   ├── views.py              # QR scan view, AJAX endpoints
-│   ├── urls.py
-│   └── templates/checkin/
-│       └── qr_scanner.html
-└── static/ ✅                # Static assets (CSS, JS, images)
-└── media/ ✅                 # User-uploaded files (e.g., generated QR codes)
-```
-
-# 5. Data Models (Conceptual) ✅ DONE - UPDATED & IMPROVED
-
-The core data models reside within the events Django app with the following improvements:
-
-## Event Model ✅ ENHANCED:
-- ✅ **Auto-slug generation** with uniqueness handling
-- ✅ **URL helper methods** for registration links
-- ✅ **Property methods** for statistics (total registrations, attended count)
-- ✅ **Better field validation** and meta options
-
-```python
-id (PK)
-organizer (ForeignKey to User model)
-name (CharField)
-slug (SlugField, unique, auto-generated)
-description (TextField)
-start_date (DateField)
-end_date (DateField)
-start_time (TimeField)
-end_time (TimeField)
-location (CharField)
-is_published (BooleanField, default=False)
-registration_open_date (DateTimeField, Optional)
-registration_close_date (DateTimeField, Optional)
-created_at (DateTimeField, auto_now_add=True)
-updated_at (DateTimeField, auto_now=True)
-```
-
-## EventField Model ✅ ENHANCED:
-- ✅ **Extended field types** including phone number
-- ✅ **Helper methods** for choices handling
-- ✅ **Additional fields** for placeholder and help text
-- ✅ **Better ordering** and validation
-
-```python
-id (PK)
-event (ForeignKey to Event)
-field_name (CharField, e.g., "Full Name", "Email Address")
-field_type (CharField, choices: 'text', 'email', 'number', 'date', 'textarea', 'radio', 'checkbox', 'select', 'file', 'phone')
-is_required (BooleanField, default=True)
-order (IntegerField, for display order)
-choices (TextField, newline-separated for 'radio', 'checkbox', 'select' types)
-placeholder (CharField, optional)
-help_text (CharField, optional)
-created_at (DateTimeField, auto_now_add=True)
-```
-
-## Registration Model ✅ ENHANCED:
-- ✅ **Auto QR code generation** on save
-- ✅ **Cached participant fields** for performance
-- ✅ **Helper methods** for data access
-- ✅ **Improved QR code generation** with PIL optimization
-
-```python
-id (PK)
-event (ForeignKey to Event)
-unique_id (UUIDField, unique, auto-generated for QR code)
-registered_at (DateTimeField, auto_now_add=True)
-qr_code_image (ImageField, auto-generated, stores in media/qr_codes/)
-status (CharField, choices: 'pending', 'attended', 'cancelled', default='pending')
-attended_at (DateTimeField, Nullable, updated upon check-in)
-participant_name (CharField, cached from form data)
-participant_email (EmailField, cached from form data)
-participant_phone (CharField, cached from form data)
-```
-
-## RegistrationFormFieldData Model ✅ ENHANCED:
-- ✅ **Display value formatting** for different field types
-- ✅ **JSON handling** for checkbox fields
-- ✅ **Better string representation**
-
-```python
-id (PK)
-registration (ForeignKey to Registration)
-event_field (ForeignKey to EventField)
-field_value (TextField, supports JSON for multi-value fields)
-```
-
-## ✅ NEW: UserProfile Model:
-```python
-id (PK)
-user (OneToOneField to User)
-organization (CharField, optional)
-phone (CharField, optional)
-created_at (DateTimeField, auto_now_add=True)
-updated_at (DateTimeField, auto_now=True)
-```
-
-# 6. Step-by-Step Development Process
-
-## ✅ Phase 1: Project Setup & Core Models - COMPLETED
-
-### ✅ Project Initialization:
-- ✅ Install Python, Django, virtual environment
-- ✅ `pip install django psycopg2-binary qrcode Pillow`
-- ✅ `django-admin startproject event_registration_attendance .`
-- ✅ `python manage.py startapp core`
-- ✅ `python manage.py startapp events`
-- ✅ `python manage.py startapp checkin`
-- ✅ Add apps to INSTALLED_APPS in settings.py
-- ✅ Configure SQLite database in settings.py (ready for PostgreSQL switch)
-- ✅ Configure static and media files
-- ✅ Set up email backend (console for development)
-- Ready for: `python manage.py migrate`
-- Ready for: `python manage.py createsuperuser`
-
-### ✅ User Authentication:
-- ✅ Standard Django user authentication configured
-- ✅ Login/logout URLs configured
-- ✅ UserProfile model created for extended user info
-
-### ✅ Define Core Models:
-- ✅ Enhanced Event model with auto-slug and helper methods
-- ✅ Improved EventField model with extended field types
-- ✅ Enhanced Registration model with auto QR generation
-- ✅ Improved RegistrationFormFieldData model with better handling
-- ✅ New UserProfile model for organizer information
-- Ready for: `python manage.py makemigrations events core`
-- Ready for: `python manage.py migrate`
-
-### ✅ Django Admin Integration:
-- Ready for: Register all models in admin.py files
-
-## Phase 2: Event Creation & Dynamic Form Builder - NEXT
-
-**Event Creation Form**:
-- Create Django ModelForm for Event model
-- Develop view and template for event creation
-- Implement URL routing
-
-**Dynamic Form Builder Interface**:
-- Design UI for adding/editing EventField instances
-- JavaScript for dynamic field management
-- Form validation and saving logic
-
-**Event Listing (Organizer Dashboard)**:
-- Create event listing view and template
-- Add edit/delete functionality
-
-## Phase 3: Participant Registration & QR Code Generation
-
-**Public Registration Page**:
-- Dynamic form generation based on EventField instances
-- Public registration URL handling
-- Form validation and submission
-
-**Form Submission & Data Storage**:
-- Registration data processing
-- RegistrationFormFieldData creation
-- QR code auto-generation (already implemented in model)
-
-**QR Code Display & Sharing**:
-- Registration confirmation page
-- QR code display and download
-- WhatsApp sharing integration
-
-## Phase 4: Participant List & Check-in System
-
-**Participant List (Organizer View)**:
-- Registration listing with filtering
-- Search functionality
-- CSV export capability
-
-**QR Code Scanner Interface (Organizer Tool)**:
-- Camera-based QR scanning
-- JavaScript integration with html5-qrcode
-- AJAX check-in processing
-
-**Django Check-in Endpoint**:
-- QR code validation
-- Attendance status updates
-- JSON response handling
-
-# 7. Settings Configuration ✅ COMPLETED & ENHANCED
-
-✅ **Development Settings**:
-- ✅ SQLite database configuration
-- ✅ Debug mode enabled
-- ✅ Static files configuration with STATICFILES_DIRS
-- ✅ Media files configuration for QR codes
-- ✅ Email backend (console for development)
-- ✅ Template configuration with media context processor
-- ✅ Security settings for development
-- ✅ Login/logout URL configuration
-
-✅ **Ready for Production**:
-- ✅ PostgreSQL configuration commented and ready
-- ✅ SMTP email configuration template provided
-- ✅ Static files collection setup
-- ✅ Security settings framework in place
-
-# 8. Deployment Considerations
-
-**Production Server**: Use Gunicorn or uWSGI
-**Reverse Proxy**: Nginx or Apache for static files and SSL
-**Database**: PostgreSQL (configuration ready in settings)
-**Environment Variables**: For sensitive information
-**Static & Media Files**: collectstatic configuration ready
-**HTTPS**: SSL certificate setup
-**Logging**: Implementation needed
-
-# 9. Future Enhancements (Out of Scope for Initial Version)
-
-- Email confirmation for participants
-- SMS notifications  
-- Payment gateway integration
-- Multiple organizers per event
-- Event analytics dashboard
-- Real-time attendance updates
-
----
-
-## ✅ COMPLETED TASKS SUMMARY:
-
-1. **Project Structure**: Complete Django project setup with proper app organization
-2. **Settings Configuration**: Production-ready settings with development defaults
-3. **Data Models**: Enhanced models with auto-generation, caching, and helper methods
-4. **Database Setup**: SQLite for development, PostgreSQL-ready configuration
-5. **Static/Media Configuration**: Proper handling of assets and user uploads
-6. **Authentication Framework**: User authentication and profile system
-7. **URL Configuration**: Main URL routing with media file serving
-8. **QR Code Integration**: Automatic QR code generation with PIL optimization
-
-## 🚧 NEXT STEPS:
-
-1. Create and run migrations
-2. Set up Django admin for model management
-3. Implement event creation views and templates
-4. Build dynamic form builder interface
-5. Create public registration system
-
-## 🧪 Final Testing Results
-
-### URL Pattern Issues - RESOLVED ✅
-- **Fixed**: NoReverseMatch errors caused by slug vs pk inconsistencies
-- **Fixed**: Template URL references now use correct parameters
-- **Verified**: All navigation links working correctly
-
-### Database & Models - WORKING ✅
-- **Event Model**: Auto-slug generation, URL methods, statistics properties
-- **Registration Model**: QR code auto-generation, status tracking
-- **EventField Model**: Dynamic form fields with validation
-- **Test Data**: Successfully created and accessible
-
-### Templates & UI - FUNCTIONAL ✅
-- **Event List**: Displays events with correct action buttons
-- **Event Detail**: Shows event information and management options
-- **Registration Form**: Public form accepting registrations
-- **Participant List**: Shows all registrations with status
-- **QR Scanner**: Camera-based scanning interface
-- **Admin Interface**: Full CRUD operations available
-
-### End-to-End Workflow - VERIFIED ✅
-1. **Event Creation**: ✅ Admin creates event via interface
-2. **Form Building**: ✅ Custom fields added to registration form
-3. **Event Publishing**: ✅ Public registration URL generated
-4. **User Registration**: ✅ Participants register and receive QR codes
-5. **QR Code Generation**: ✅ Unique codes created automatically
-6. **Attendance Tracking**: ✅ QR scanning marks attendance
-7. **Reporting**: ✅ Export participant lists and statistics
-
-## 🚀 Quick Start Guide
-
-### Prerequisites
+# Event Registration & Attendance System
+
+A comprehensive Django web application for event management with QR code-based attendance tracking. This system enables event organizers to create events, build custom registration forms, and track attendance using QR code technology.
+
+## 🚀 Features
+
+### 📅 Event Management
+- **Complete Event Lifecycle**: Create, edit, delete, and publish events
+- **Dynamic Form Builder**: Visual interface to create custom registration forms
+- **Flexible Field Types**: Support for text, email, phone, date, radio buttons, checkboxes, dropdowns, and file uploads
+- **SEO-Friendly URLs**: Automatic slug generation for events
+- **Event Analytics**: Real-time statistics and attendance tracking
+
+### 📝 Registration System
+- **Public Registration**: Unique registration URLs for each event
+- **Dynamic Forms**: Forms automatically generated based on organizer configuration
+- **Validation**: Comprehensive form validation with user-friendly error messages
+- **Participant Identification**: Flexible field marking for names, emails, and phone numbers
+
+### 📱 QR Code Technology
+- **Automatic Generation**: QR codes created for both events and individual registrations
+- **Secure Implementation**: UUID-based codes prevent enumeration attacks
+- **Multiple Formats**: Download and share QR codes via WhatsApp
+- **Real-time Scanning**: Web-based QR scanner with camera access
+
+### ✅ Attendance Tracking
+- **Instant Check-in**: Scan QR codes to mark attendance
+- **Status Management**: Track participant status (pending, attended, cancelled)
+- **Timestamp Recording**: Automatic attendance time logging
+- **Mobile Optimized**: Scanner interface works on all devices
+
+### 👥 User Management
+- **Authentication System**: Secure login/logout functionality
+- **Organizer Permissions**: Event-based access control
+- **User Profiles**: Extended user information management
+- **Admin Interface**: Django admin integration for management
+
+## 🛠 Technology Stack
+
+### Backend
+- **Framework**: Django 5.2.1
+- **Language**: Python 3.12+
+- **Database**: SQLite (development) / PostgreSQL (production)
+- **Authentication**: Django built-in authentication system
+
+### Frontend
+- **Templates**: Django Templates with Bootstrap 5.3
+- **Styling**: Bootstrap + Font Awesome icons + Custom CSS
+- **JavaScript**: Vanilla JavaScript for dynamic interactions
+- **QR Scanner**: jsQR library for browser-based scanning
+
+### Libraries & Dependencies
+- **QR Code Generation**: `qrcode` with Pillow for image processing
+- **Image Processing**: Pillow for QR code generation and manipulation
+- **Data Export**: openpyxl for Excel exports
+- **Security**: pyOpenSSL for SSL/TLS support
+- **Development**: django-extensions for enhanced development tools
+
+## 📋 System Requirements
+
+- Python 3.12 or higher
+- Django 5.2.1+
+- Modern web browser with camera access (for QR scanning)
+- 512MB RAM minimum
+- 1GB disk space for media files
+
+## ⚡ Quick Start
+
+### 1. Installation
+
 ```bash
-# Ensure Python 3.12+ is installed
-python --version
-
-# Install uv (if not already installed)
-pip install uv
-```
-
-### Setup & Run
-```bash
-# Clone and navigate to project
+# Clone the repository
+git clone https://github.com/BenedictusAryo/event-registration-attendance.git
 cd event-registration-attendance
 
-# Install dependencies (already done)
-uv sync
+# Install dependencies
+pip install -r requirements.txt
 
-# Activate virtual environment
-# On Windows:
-.venv\Scripts\activate
-
-# Apply migrations (already done)
+# Run database migrations
 python manage.py migrate
 
-# Create superuser (optional - admin/admin123 already exists)
+# Create superuser (optional)
 python manage.py createsuperuser
 
-# Run development server
+# Start development server
 python manage.py runserver
 ```
 
-### Access the Application
-1. **Main App**: http://127.0.0.1:8000/
-2. **Login**: Use admin/admin123 or create new account
-3. **Test Registration**: http://127.0.0.1:8000/events/tech-conference-2025/register/
-4. **QR Scanner**: http://127.0.0.1:8000/checkin/1/scanner/
+### 2. Access Points
 
-## 📱 Usage Instructions
+- **Main Application**: http://127.0.0.1:8000/
+- **Admin Interface**: http://127.0.0.1:8000/admin/
+- **Event Management**: http://127.0.0.1:8000/events/
 
-### For Event Organizers:
-1. **Login** to the admin interface or main app
-2. **Create Event** with details and custom form fields
-3. **Publish Event** to generate public registration URL
-4. **Share URL** with potential participants
-5. **Monitor Registrations** via participant list
-6. **Scan QR Codes** at event venue for attendance tracking
+### 3. First Steps
 
-### For Participants:
-1. **Access Registration URL** provided by organizer
-2. **Fill Registration Form** with required information
-3. **Receive QR Code** after successful registration
-4. **Download/Save QR Code** for event day
-5. **Present QR Code** at venue for quick check-in
+1. Login to the application
+2. Create your first event
+3. Build a custom registration form
+4. Publish the event to generate registration URL
+5. Share the registration URL with participants
+6. Use the QR scanner for attendance tracking
 
-## 🔧 Technical Details
+## 🎯 How It Works
 
-### Architecture
-- **Framework**: Django 5.2.1
-- **Database**: SQLite (development) / PostgreSQL (production ready)
-- **Frontend**: Django Templates + Bootstrap
-- **QR Codes**: qrcode library with PIL for image generation
-- **File Storage**: Local media files (S3 ready for production)
+### Event Creation Workflow
 
-### Security Features
-- **User Authentication**: Django's built-in auth system
-- **CSRF Protection**: Enabled on all forms
+```mermaid
+sequenceDiagram
+    participant O as Organizer
+    participant S as System
+    participant DB as Database
+    participant QR as QR Generator
+
+    O->>S: Login to system
+    S->>O: Dashboard access
+    O->>S: Create new event
+    S->>O: Event form interface
+    O->>S: Submit event details
+    S->>DB: Save event data
+    S->>QR: Generate event QR code
+    QR->>S: Return QR code image
+    S->>DB: Store QR code
+    S->>O: Event created successfully
+    O->>S: Build registration form
+    S->>O: Form builder interface
+    O->>S: Add/configure fields
+    S->>DB: Save form configuration
+    O->>S: Publish event
+    S->>DB: Update event status
+    S->>O: Registration URL generated
+```
+
+### Participant Registration Process
+
+```mermaid
+sequenceDiagram
+    participant P as Participant
+    participant S as System
+    participant DB as Database
+    participant QR as QR Generator
+    participant E as Email System
+
+    P->>S: Access registration URL
+    S->>DB: Fetch event & form config
+    S->>P: Display registration form
+    P->>S: Submit registration data
+    S->>S: Validate form data
+    S->>DB: Save registration
+    S->>QR: Generate participant QR code
+    QR->>S: Return QR code image
+    S->>DB: Store QR code
+    S->>E: Send confirmation email
+    S->>P: Registration success page
+    P->>S: Download QR code
+    S->>P: QR code file
+```
+
+### Attendance Tracking Flow
+
+```mermaid
+sequenceDiagram
+    participant O as Organizer
+    participant S as Scanner System
+    participant P as Participant
+    participant DB as Database
+
+    O->>S: Open QR scanner
+    S->>O: Camera interface
+    P->>O: Present QR code
+    O->>S: Scan QR code
+    S->>S: Decode QR data
+    S->>DB: Lookup registration
+    DB->>S: Registration details
+    S->>O: Show participant info
+    O->>S: Confirm check-in
+    S->>DB: Update attendance status
+    S->>DB: Record timestamp
+    DB->>S: Confirmation
+    S->>O: Check-in successful
+```
+
+### System Architecture
+
+```mermaid
+graph TB
+    User[👥 Users] --> Web[🌐 Web Interface]
+    Web --> Auth[🔐 Authentication]
+    Auth --> Views[📄 Django Views]
+    
+    Views --> Models[💾 Models]
+    Models --> DB[(🗄️ Database)]
+    
+    Views --> Templates[🎨 Templates]
+    Templates --> Static[📁 Static Files]
+    
+    Models --> QR[📱 QR Generator]
+    QR --> Media[📂 Media Storage]
+    
+    Views --> Scanner[📷 QR Scanner]
+    Scanner --> Camera[📹 Device Camera]
+    
+    subgraph "Django Apps"
+        Events[📅 Events App]
+        Checkin[✅ Check-in App]
+        Core[⚙️ Core App]
+    end
+    
+    Views --> Events
+    Views --> Checkin
+    Views --> Core
+```
+
+## 📁 Project Structure
+
+```
+event-registration-attendance/
+├── event_registration_attendance/    # Main project configuration
+│   ├── settings.py                  # Django settings
+│   ├── urls.py                      # Main URL configuration
+│   ├── wsgi.py                      # WSGI configuration
+│   └── asgi.py                      # ASGI configuration
+│
+├── core/                            # Core utilities and models
+│   ├── models.py                    # UserProfile model
+│   ├── views.py                     # Core views
+│   └── admin.py                     # Admin configuration
+│
+├── events/                          # Event management application
+│   ├── models.py                    # Event, EventField, Registration models
+│   ├── views.py                     # Event CRUD, form builder, registration
+│   ├── forms.py                     # Django forms
+│   ├── urls.py                      # Event-related URLs
+│   ├── admin.py                     # Admin interface
+│   └── templates/events/            # Event templates
+│       ├── event_list.html          # Event dashboard
+│       ├── event_create.html        # Event creation form
+│       ├── event_detail.html        # Event management
+│       ├── form_builder.html        # Dynamic form builder
+│       ├── registration_form.html   # Public registration
+│       └── participant_list.html    # Participant management
+│
+├── checkin/                         # Attendance tracking application
+│   ├── views.py                     # QR scanning and check-in logic
+│   ├── urls.py                      # Check-in URLs
+│   └── templates/checkin/           # Check-in templates
+│       └── qr_scanner.html          # QR scanner interface
+│
+├── templates/                       # Global templates
+│   ├── base/                        # Base templates
+│   ├── registration/                # Auth templates
+│   └── admin/                       # Admin customizations
+│
+├── static/                          # Static assets
+│   ├── css/                         # Stylesheets
+│   ├── js/                          # JavaScript files
+│   └── images/                      # Image assets
+│
+├── media/                           # User-uploaded files
+│   ├── qr_codes/                    # Generated QR codes
+│   └── event_images/                # Event images
+│
+├── requirements.txt                 # Python dependencies
+├── manage.py                        # Django management script
+└── README.md                        # This file
+```
+
+## 🔧 Configuration
+
+### Database Configuration
+
+#### Development (SQLite)
+```python
+# Default configuration - no setup required
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
+```
+
+#### Production (PostgreSQL)
+```python
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'event_registration',
+        'USER': 'your_username',
+        'PASSWORD': 'your_password',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
+}
+```
+
+### Environment Variables
+
+Create a `.env` file in the project root:
+
+```env
+DEBUG=True
+SECRET_KEY=your-secret-key-here
+ALLOWED_HOSTS=localhost,127.0.0.1
+
+# Database (if using PostgreSQL)
+DB_NAME=event_registration
+DB_USER=your_username
+DB_PASSWORD=your_password
+DB_HOST=localhost
+DB_PORT=5432
+
+# Email Configuration (optional)
+EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=your-email@gmail.com
+EMAIL_HOST_PASSWORD=your-app-password
+```
+
+## 📚 Usage Guide
+
+### For Event Organizers
+
+#### 1. Creating an Event
+1. **Login** to the system using your credentials
+2. **Navigate** to the events dashboard
+3. **Click** "Create Event" to open the event form
+4. **Fill in** event details:
+   - Event name and description
+   - Date, time, and location
+   - Optional event image
+5. **Save** the event (initially unpublished)
+
+#### 2. Building Registration Forms
+1. **Open** the event you created
+2. **Click** "Form Builder" to access the form designer
+3. **Add fields** using the interface:
+   - Choose field types (text, email, phone, etc.)
+   - Mark required fields
+   - Set field order
+   - Add placeholder text and help text
+4. **Mark participant identifier fields**:
+   - Select which field represents the participant name
+   - Mark email and phone fields for contact information
+5. **Preview** the form to ensure it meets your needs
+6. **Save** the form configuration
+
+#### 3. Publishing Events
+1. **Review** your event and registration form
+2. **Click** "Publish Event" when ready
+3. **Copy** the generated registration URL
+4. **Share** the URL with potential participants via:
+   - Email campaigns
+   - Social media
+   - Website embedding
+   - Direct messaging
+
+#### 4. Managing Registrations
+1. **Access** the participant list from your event dashboard
+2. **View** all registered participants with their information
+3. **Search** and filter participants as needed
+4. **Export** participant data to Excel for external use
+5. **Send emails** directly to participants from the interface
+
+#### 5. Attendance Tracking
+1. **Open** the QR scanner from your event page
+2. **Allow** camera access when prompted
+3. **Scan** participant QR codes at the event venue
+4. **Confirm** check-ins as participants arrive
+5. **Monitor** real-time attendance statistics
+
+### For Participants
+
+#### 1. Event Registration
+1. **Access** the registration URL provided by the organizer
+2. **Fill out** the registration form with accurate information
+3. **Submit** the form after reviewing your details
+4. **Receive** confirmation and your unique QR code
+
+#### 2. QR Code Management
+1. **Download** your QR code from the confirmation page
+2. **Save** the QR code to your device or print it
+3. **Optional**: Share via WhatsApp using the provided button
+4. **Bring** your QR code to the event for check-in
+
+#### 3. Event Check-in
+1. **Arrive** at the event venue
+2. **Present** your QR code to the organizer
+3. **Wait** for the scan confirmation
+4. **Enjoy** the event once checked in
+
+## 🔒 Security Features
+
+### Authentication & Authorization
+- **User Authentication**: Django's built-in authentication system
 - **Permission Control**: Event ownership validation
-- **UUID-based QR Codes**: Prevents guessing/enumeration attacks
+- **CSRF Protection**: Enabled on all forms
+- **Session Security**: Secure session management
 
-### Performance Optimizations
-- **Cached Participant Data**: Common fields cached on registration model
-- **Optimized Queries**: Related objects prefetched where needed
-- **Static File Handling**: Proper static/media file configuration
+### QR Code Security
+- **UUID-based Codes**: Prevents enumeration attacks
+- **Unique Identifiers**: Each registration gets a unique code
+- **Secure Generation**: Random UUID generation
+- **Access Control**: Only event organizers can scan codes
+
+### Data Protection
+- **Input Validation**: Comprehensive form validation
+- **SQL Injection Protection**: Django ORM protection
+- **XSS Prevention**: Template auto-escaping
+- **File Upload Security**: Restricted file types and sizes
+
+## 🚀 Deployment
+
+### Production Checklist
+
+#### 1. Environment Setup
+```python
+# settings.py for production
+DEBUG = False
+ALLOWED_HOSTS = ['your-domain.com', 'www.your-domain.com']
+
+# Use environment variables
+SECRET_KEY = os.environ.get('SECRET_KEY')
+```
+
+#### 2. Database Configuration
+```python
+# PostgreSQL for production
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DB_NAME'),
+        'USER': os.environ.get('DB_USER'),
+        'PASSWORD': os.environ.get('DB_PASSWORD'),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
+    }
+}
+```
+
+#### 3. Static Files (AWS S3)
+```python
+# Optional: Use AWS S3 for static and media files
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+STATICFILES_STORAGE = 'storages.backends.s3boto3.StaticS3Boto3Storage'
+
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+```
+
+#### 4. SSL/HTTPS Setup
+```python
+# Force HTTPS in production
+SECURE_SSL_REDIRECT = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+```
+
+### Deployment Commands
+```bash
+# Collect static files
+python manage.py collectstatic --noinput
+
+# Run migrations
+python manage.py migrate
+
+# Create superuser
+python manage.py createsuperuser
+
+# Start with production WSGI server
+gunicorn event_registration_attendance.wsgi:application
+```
+
+## 🧪 Testing
+
+### Manual Testing Checklist
+
+#### Event Management
+- [ ] Create new events with all field types
+- [ ] Edit existing events
+- [ ] Publish/unpublish events
+- [ ] Delete events with proper confirmation
+
+#### Form Builder
+- [ ] Add different field types
+- [ ] Reorder fields using drag-and-drop
+- [ ] Mark required fields
+- [ ] Set participant identifier fields
+- [ ] Preview forms before publishing
+
+#### Registration Process
+- [ ] Access public registration URLs
+- [ ] Submit forms with validation
+- [ ] Receive QR codes after registration
+- [ ] Download QR codes in various formats
+
+#### Attendance Tracking
+- [ ] Open QR scanner with camera access
+- [ ] Scan valid QR codes successfully
+- [ ] Handle invalid QR codes gracefully
+- [ ] Update attendance status correctly
+
+### Performance Testing
+- **Load Testing**: Test with multiple concurrent registrations
+- **Scanner Performance**: Test QR scanning under various lighting conditions
+- **Database Performance**: Monitor query performance with large datasets
+
+## 🤝 Contributing
+
+### Development Setup
+1. **Fork** the repository
+2. **Create** a feature branch
+3. **Make** your changes with tests
+4. **Submit** a pull request with clear description
+
+### Code Standards
+- **PEP 8**: Follow Python style guidelines
+- **Django Best Practices**: Use Django conventions
+- **Documentation**: Update docs for new features
+- **Testing**: Include tests for new functionality
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+### Common Issues
+
+#### QR Scanner Not Working
+- **Ensure HTTPS**: Camera access requires secure connection
+- **Check Permissions**: Allow camera access in browser
+- **Browser Compatibility**: Use modern browsers (Chrome, Firefox, Safari)
+
+#### Registration Form Issues
+- **Field Validation**: Check form field configurations
+- **Required Fields**: Ensure required fields are marked properly
+- **Field Types**: Verify field types match expected input
+
+#### Performance Issues
+- **Database Optimization**: Use indexes on frequently queried fields
+- **Media Storage**: Consider cloud storage for large files
+- **Caching**: Implement Redis caching for better performance
+
+### Getting Help
+- **Documentation**: Check this README for detailed instructions
+- **Issues**: Report bugs on GitHub Issues
+- **Discussions**: Use GitHub Discussions for questions
+
+## 🎯 Roadmap
+
+### Upcoming Features
+- **Email Notifications**: Automated email confirmations and reminders
+- **Multi-language Support**: Internationalization for global use
+- **Advanced Analytics**: Detailed reporting and analytics dashboard
+- **Mobile App**: Native mobile app for QR scanning
+- **Integration APIs**: REST API for third-party integrations
+- **Bulk Operations**: Bulk participant management features
+
+### Performance Improvements
+- **Caching Layer**: Redis-based caching for better performance
+- **Database Optimization**: Query optimization and indexing
+- **CDN Integration**: Content delivery network for static files
+- **Background Tasks**: Celery for asynchronous processing
 
 ---
 
-## 🎯 Implementation Complete!
-
-This Django Event Registration & Attendance system is now **production-ready** with all core features implemented, tested, and verified. The application successfully handles the complete workflow from event creation to participant check-in using QR code technology.
-
-**Total Development Time**: Comprehensive implementation with full testing
-**Lines of Code**: ~2000+ across models, views, templates, and configuration
-**Test Coverage**: Manual testing of all workflows completed successfully
+**Built with ❤️ using Django and modern web technologies**
